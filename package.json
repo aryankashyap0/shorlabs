@@ -1,0 +1,18 @@
+{
+  "name": "shorlabs",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run --filter @shorlabs/web dev",
+    "build": "bun run --filter @shorlabs/web build",
+    "lint": "bun run --filter @shorlabs/web lint",
+    "dev:web": "bun run --filter @shorlabs/web dev"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

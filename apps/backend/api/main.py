@@ -1,0 +1,209 @@
+"""
+Shorlabs API - FastAPI application for backend deployment platform.
+
+This single Lambda handles:
+1. HTTP requests (via Mangum/Lambda Web Adapter)
+2. SQS deployment events (background tasks)
+"""
+import os
+import json
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from mangum import Mangum
+
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
+
+from api.routes import github, projects, deployments
+
+
+# CORS allowed origins
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://shorlabs.com",
+    "https://www.shorlabs.com",
+    os.environ.get("FRONTEND_URL", ""),
+]
+# Remove empty strings
+ALLOWED_ORIGINS = [o for o in ALLOWED_ORIGINS if o]
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan events."""
+    # Startup: ensure DynamoDB table exists
+    from api.db.dynamodb import get_or_create_table
+    get_or_create_table()
+    yield
+    # Shutdown: nothing to do
+
+
+app = FastAPI(
+    title="Shorlabs API",
+    description="Backend deployment platform API",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(github.router)
+app.include_router(projects.router)
+app.include_router(deployments.router)
+
+
+@app.get("/")
+async def root():
+    """Health check endpoint."""
+    return {"status": "ok", "service": "shorlabs-api"}
+
+
+@app.get("/health")
+async def health():
+    """Health check endpoint."""
+    return {"status": "ok"}
+
+
+# Lambda handler (for AWS Lambda deployment)
+_mangum_handler = Mangum(app, lifespan="off")
+
+
+def _handle_sqs_event(event: dict) -> dict:
+    """
+    Handle SQS deployment events.
+    Processes each message in the batch and runs the deployment.
+    """
+    from api.routes.projects import _run_deployment_sync
+    
+    records = event.get("Records", [])
+    print(f"📥 Received {len(records)} SQS message(s)")
+    
+    failed_message_ids = []
+    
+    for record in records:
+        message_id = record.get("messageId", "unknown")
+        try:
+            # Parse the message body
+            body = json.loads(record.get("body", "{}"))
+            print(f"📦 Processing message {message_id}: {body}")
+            
+            # Run the deployment synchronously
+            _run_deployment_sync(
+                project_id=body["project_id"],
+                github_url=body["github_url"],
+                github_token=body.get("github_token"),
+                root_directory=body.get("root_directory", "./"),
+                start_command=body.get("start_command", "uvicorn main:app --host 0.0.0.0 --port 8080"),
+                memory=body.get("memory", 1024),
+                timeout=body.get("timeout", 30),
+                ephemeral_storage=body.get("ephemeral_storage", 512),
+            )
+            print(f"✅ Message {message_id} processed successfully")
+            
+        except Exception as e:
+            print(f"❌ Failed to process message {message_id}: {e}")
+            import traceback
+            traceback.print_exc()
+            failed_message_ids.append(message_id)
+    
+    # Return batch item failures for partial batch response
+    # This tells SQS which messages failed so they can be retried
+    if failed_message_ids:
+        return {
+            "batchItemFailures": [
+                {"itemIdentifier": msg_id} for msg_id in failed_message_ids
+            ]
+        }
+    
+    return {"statusCode": 200, "body": f"Processed {len(records)} messages"}
+
+
+def _is_sqs_event(event: dict) -> bool:
+    """Check if the event is from SQS."""
+    if not isinstance(event, dict):
+        return False
+    records = event.get("Records", [])
+    if not records:
+        return False
+    # SQS events have eventSource: "aws:sqs"
+    return records[0].get("eventSource") == "aws:sqs"
+
+
+def _is_eventbridge_event(event: dict) -> bool:
+    """Check if the event is from EventBridge."""
+    if not isinstance(event, dict):
+        return False
+    # EventBridge events have 'source' field starting with 'aws.events'
+    return event.get("source") == "aws.events"
+
+
+def _handle_eventbridge_event(event: dict) -> dict:
+    """
+    Handle EventBridge scheduled events.
+    Currently supports: usage metrics aggregation.
+    """
+    detail = event.get("detail", {})
+    action = detail.get("action")
+    
+    print(f"📅 EventBridge event received, action: {action}")
+    
+    if action == "aggregate_usage":
+        from api.usage_aggregator import aggregate_usage_metrics
+        try:
+            aggregate_usage_metrics()
+            return {"statusCode": 200, "body": "Usage aggregation complete"}
+        except Exception as e:
+            print(f"❌ Usage aggregation failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"statusCode": 500, "body": f"Aggregation failed: {str(e)}"}
+    
+    print(f"⚠️ Unknown EventBridge action: {action}")
+    return {"statusCode": 400, "body": f"Unknown action: {action}"}
+
+
+@app.post("/events")
+async def handle_events(request: Request):
+    """
+    Handle incoming events from Lambda Web Adapter.
+    LWA converts SQS events into HTTP POST requests to this endpoint (default path /events).
+    
+    Also handles EventBridge scheduled events for usage aggregation.
+    """
+    try:
+        event = await request.json()
+        print(f"📥 Received event via HTTP POST: {event.keys() if isinstance(event, dict) else 'unknown'}")
+        
+        # Check if this is an EventBridge event
+        if _is_eventbridge_event(event):
+            print("📅 Routing to EventBridge handler (scheduled task)")
+            return _handle_eventbridge_event(event)
+        
+        # Check if this is an SQS event
+        if _is_sqs_event(event):
+            print("🔄 Routing to SQS handler (deployment task)")
+            # Run the synchronous handler
+            # Since this is a dedicated Lambda for handling this batch, blocking is acceptable/expected
+            return _handle_sqs_event(event)
+        
+        # Other event types?
+        print("⚠️ Received non-SQS/non-EventBridge event, ignoring")
+        return {"status": "ignored", "reason": "unknown_event_type"}
+        
+    except Exception as e:
+        print(f"❌ Error handling event: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"status": "error", "message": str(e)}

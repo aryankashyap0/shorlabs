@@ -1,0 +1,109 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "ECRAccess",
+            "Effect": "Allow",
+            "Action": [
+                "ecr:*",
+                "events:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "LambdaAccess",
+            "Effect": "Allow",
+            "Action": [
+                "lambda:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "IAMAccess",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateRole",
+                "iam:DeleteRole",
+                "iam:GetRole",
+                "iam:PassRole",
+                "iam:AttachRolePolicy",
+                "iam:DetachRolePolicy",
+                "iam:PutRolePolicy",
+                "iam:DeleteRolePolicy",
+                "iam:GetRolePolicy",
+                "iam:TagRole",
+                "iam:UntagRole",
+                "iam:ListRolePolicies",
+                "iam:ListAttachedRolePolicies"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "S3Access",
+            "Effect": "Allow",
+            "Action": [
+                "s3:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "CloudWatchLogsAccess",
+            "Effect": "Allow",
+            "Action": [
+                "logs:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "CloudWatchMetricsAccess",
+            "Effect": "Allow",
+            "Action": [
+                "cloudwatch:GetMetricStatistics",
+                "cloudwatch:GetMetricData",
+                "cloudwatch:ListMetrics"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "CodeBuildAccess",
+            "Effect": "Allow",
+            "Action": [
+                "codebuild:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "STSAccess",
+            "Effect": "Allow",
+            "Action": [
+                "sts:GetCallerIdentity",
+                "sts:AssumeRole"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "DynamoDBAccess",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "SQSAccess",
+            "Effect": "Allow",
+            "Action": [
+                "sqs:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "CloudFrontAccess",
+            "Effect": "Allow",
+            "Action": [
+                "cloudfront:*"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

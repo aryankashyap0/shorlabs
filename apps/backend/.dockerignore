@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Environment files (will use ECS environment variables)
+.env
+.env.local
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+*.md
+
+# Deployment templates - needed for worker deployments
+# templates/
+
+# CDK and deployment scripts
+cdk.out/
+*.js
+cdk.json
+package.json
+
+# Test files
+tests/
+test_*/
+*_test.py

@@ -1,0 +1,334 @@
+"use client"
+
+import { useState, useEffect, useCallback } from "react"
+import { useUser, useAuth, useClerk } from "@clerk/nextjs"
+import { useRouter } from "next/navigation"
+import { Github, Search, ArrowLeft, Lock, Globe, Loader2, AlertCircle, GitBranch, ArrowUpRight } from "lucide-react"
+import Link from "next/link"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+
+interface GitHubRepo {
+    id: number
+    name: string
+    full_name: string
+    private: boolean
+    language: string | null
+    updated_at: string
+}
+
+const LANGUAGE_COLORS: Record<string, string> = {
+    TypeScript: "bg-blue-500",
+    JavaScript: "bg-yellow-400",
+    Python: "bg-emerald-500",
+    Rust: "bg-orange-500",
+    Go: "bg-cyan-500",
+    Java: "bg-red-500",
+    Ruby: "bg-red-400",
+    PHP: "bg-indigo-400",
+    Swift: "bg-orange-400",
+    Kotlin: "bg-purple-500",
+    C: "bg-gray-500",
+    "C++": "bg-pink-500",
+    "C#": "bg-green-600",
+}
+
+export default function ImportRepositoryPage() {
+    const router = useRouter()
+    const { user, isLoaded: userLoaded } = useUser()
+    const { getToken } = useAuth()
+    const { signOut } = useClerk()
+    const [repos, setRepos] = useState<GitHubRepo[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const [searchQuery, setSearchQuery] = useState("")
+
+    const githubAccount = user?.externalAccounts.find(
+        (account) => (account.provider as string) === "oauth_github" || (account.provider as string) === "github"
+    )
+
+    const fetchRepos = useCallback(async () => {
+        if (!githubAccount) {
+            setLoading(false)
+            return
+        }
+
+        setLoading(true)
+        setError(null)
+        try {
+            const token = await getToken({ skipCache: true })
+            if (!token) {
+                signOut({ redirectUrl: "/sign-in" })
+                return
+            }
+
+            const response = await fetch(`${API_BASE_URL}/api/github/repos`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+
+            if (!response.ok) {
+                const data = await response.json()
+                if (response.status === 401 && data.detail === "Token expired") {
+                    signOut({ redirectUrl: "/sign-in" })
+                    return
+                }
+                throw new Error(data.detail || "Failed to fetch repos")
+            }
+
+            const data = await response.json()
+            setRepos(data)
+        } catch (err) {
+            console.error("Failed to fetch repos:", err)
+            setError(err instanceof Error ? err.message : "Failed to fetch repositories")
+        } finally {
+            setLoading(false)
+        }
+    }, [getToken, signOut, githubAccount])
+
+    useEffect(() => {
+        if (userLoaded) {
+            fetchRepos()
+        }
+    }, [userLoaded, fetchRepos])
+
+    const handleConnectGitHub = async () => {
+        if (!user) return
+        try {
+            const externalAccount = await user.createExternalAccount({
+                strategy: "oauth_github",
+                redirectUrl: "/new",
+            })
+            if (externalAccount.verification?.externalVerificationRedirectURL) {
+                window.location.href = externalAccount.verification.externalVerificationRedirectURL.toString()
+            }
+        } catch (err) {
+            console.error("Failed to connect GitHub:", err)
+            setError("Failed to connect GitHub. Please try again.")
+        }
+    }
+
+    const handleImport = (repoFullName: string) => {
+        router.push(`/new/configure?repo=${encodeURIComponent(repoFullName)}`)
+    }
+
+    const filteredRepos = repos.filter(repo =>
+        repo.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        repo.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+
+    const formatRelativeTime = (dateString: string) => {
+        const date = new Date(dateString)
+        const now = new Date()
+        const diffMs = now.getTime() - date.getTime()
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+        const diffDays = Math.floor(diffHours / 24)
+
+        if (diffHours < 1) return "just now"
+        if (diffHours < 24) return `${diffHours}h ago`
+        if (diffDays < 7) return `${diffDays}d ago`
+        return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    }
+
+    return (
+        <div className="min-h-screen bg-zinc-50">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+                {/* Navigation */}
+                <Link
+                    href="/projects"
+                    className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 transition-colors mb-8 group"
+                >
+                    <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                    <span>Back to Projects</span>
+                </Link>
+
+                {/* Header */}
+                <div className="mb-8">
+                    <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">New Project</h1>
+                    <p className="text-sm text-zinc-500 mt-1">Import a Git repository to deploy</p>
+                </div>
+
+                {/* Error State */}
+                {error && (
+                    <div className="flex items-start gap-3 text-sm bg-red-50 p-4 rounded-2xl border border-red-100 mb-6">
+                        <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-medium text-red-900">Something went wrong</p>
+                            <p className="text-red-600 mt-0.5">{error}</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Main Content */}
+                {!userLoaded ? (
+                    <div className="flex items-center justify-center py-20">
+                        <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
+                    </div>
+                ) : !githubAccount ? (
+                    // Connect GitHub CTA
+                    <div className="bg-white rounded-2xl border border-zinc-200 p-12 text-center hover:shadow-lg hover:shadow-zinc-900/5 transition-shadow">
+                        <div className="w-16 h-16 rounded-2xl bg-zinc-900 flex items-center justify-center mx-auto mb-6">
+                            <Github className="h-8 w-8 text-white" />
+                        </div>
+                        <h2 className="text-xl font-semibold text-zinc-900 mb-2">
+                            Connect GitHub
+                        </h2>
+                        <p className="text-sm text-zinc-500 mb-8 max-w-sm mx-auto">
+                            Link your GitHub account to import repositories and deploy your projects.
+                        </p>
+                        <Button
+                            onClick={handleConnectGitHub}
+                            className="bg-zinc-900 hover:bg-zinc-800 text-white rounded-full h-12 px-8 shadow-lg shadow-zinc-900/10"
+                        >
+                            <Github className="h-5 w-5 mr-2" />
+                            Connect GitHub
+                        </Button>
+                    </div>
+                ) : (
+                    // Repository List
+                    <div className="space-y-6">
+                        {/* GitHub Account Card */}
+                        <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden hover:shadow-lg hover:shadow-zinc-900/5 transition-shadow">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-zinc-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center">
+                                        <Github className="h-5 w-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-zinc-900">
+                                            {githubAccount.username || user?.username}
+                                        </p>
+                                        <p className="text-xs text-zinc-500">GitHub Account</p>
+                                    </div>
+                                </div>
+                                <a
+                                    href={`https://github.com/${githubAccount.username}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors flex items-center gap-1"
+                                >
+                                    View Profile
+                                    <ArrowUpRight className="h-3.5 w-3.5" />
+                                </a>
+                            </div>
+
+                            {/* Search */}
+                            <div className="px-4 sm:px-6 py-4 border-b border-zinc-100 bg-zinc-50/50">
+                                <div className="relative">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                                    <Input
+                                        placeholder="Search repositories..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="pl-11 h-11 bg-white border-zinc-200 rounded-xl text-sm focus-visible:ring-zinc-200"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Loading state */}
+                            {loading ? (
+                                <div className="divide-y divide-zinc-100">
+                                    {[1, 2, 3, 4, 5].map(i => (
+                                        <div key={i} className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                                            <div className="w-10 h-10 rounded-xl bg-zinc-100 animate-pulse" />
+                                            <div className="flex-1">
+                                                <div className="h-4 w-40 bg-gradient-to-r from-zinc-200 via-zinc-100 to-zinc-200 rounded bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite] mb-2" />
+                                                <div className="h-3 w-24 bg-zinc-100 rounded" />
+                                            </div>
+                                            <div className="w-20 h-9 bg-zinc-100 rounded-full" />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : filteredRepos.length === 0 ? (
+                                <div className="px-4 sm:px-6 py-16 text-center">
+                                    <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center mx-auto mb-4">
+                                        <Search className="h-6 w-6 text-zinc-400" />
+                                    </div>
+                                    <p className="font-medium text-zinc-900 mb-1">No repositories found</p>
+                                    <p className="text-sm text-zinc-500">
+                                        {searchQuery ? `No results for "${searchQuery}"` : "You don't have any repositories yet"}
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-zinc-100 max-h-[520px] overflow-y-auto">
+                                    {filteredRepos.map((repo) => (
+                                        <div
+                                            key={repo.id}
+                                            className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 hover:bg-zinc-50 transition-colors group"
+                                        >
+                                            {/* Icon with language color */}
+                                            <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center shrink-0 relative self-start sm:self-center">
+                                                <GitBranch className="h-5 w-5 text-zinc-500" />
+                                                {repo.language && LANGUAGE_COLORS[repo.language] && (
+                                                    <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ${LANGUAGE_COLORS[repo.language]} border-2 border-white`} />
+                                                )}
+                                            </div>
+
+                                            {/* Info */}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium text-zinc-900 truncate">
+                                                        {repo.name}
+                                                    </span>
+                                                    {repo.private ? (
+                                                        <span className="inline-flex items-center gap-1 text-xs text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded">
+                                                            <Lock className="h-3 w-3" />
+                                                            Private
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 text-xs text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded">
+                                                            <Globe className="h-3 w-3" />
+                                                            Public
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs text-zinc-500 mt-1">
+                                                    {repo.language && (
+                                                        <>
+                                                            <span className="flex items-center gap-1">
+                                                                <span className={`w-2 h-2 rounded-full ${LANGUAGE_COLORS[repo.language] || 'bg-zinc-400'}`} />
+                                                                {repo.language}
+                                                            </span>
+                                                            <span className="text-zinc-300">·</span>
+                                                        </>
+                                                    )}
+                                                    <span>Updated {formatRelativeTime(repo.updated_at)}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Import Button */}
+                                            <Button
+                                                onClick={() => handleImport(repo.full_name)}
+                                                variant="outline"
+                                                className="rounded-full h-9 px-5 text-sm shrink-0 border-zinc-200 hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all w-full sm:w-auto"
+                                            >
+                                                Import
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Help Text */}
+                        <p className="text-center text-xs text-zinc-400">
+                            Don&apos;t see your repository?{" "}
+                            <a
+                                href="https://github.com/settings/installations"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-zinc-600 hover:text-zinc-900 underline underline-offset-2"
+                            >
+                                Adjust GitHub permissions
+                            </a>
+                        </p>
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
