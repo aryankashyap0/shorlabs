@@ -181,7 +181,17 @@ export default function ImportRepositoryPage() {
 
             const data = await response.json()
             if (data && data.url) {
-                window.location.href = data.url
+                // Open GitHub installation in a popup window
+                const width = 600
+                const height = 800
+                const left = window.screenX + (window.outerWidth - width) / 2
+                const top = window.screenY + (window.outerHeight - height) / 2
+
+                window.open(
+                    data.url,
+                    'github-install',
+                    `width=${width},height=${height},left=${left},top=${top},popup=1`
+                )
             } else {
                 throw new Error("Invalid auth URL response")
             }
