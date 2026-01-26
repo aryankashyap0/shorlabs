@@ -463,7 +463,7 @@ export default function ImportRepositoryPage() {
                         <p className="text-center text-xs text-zinc-400">
                             Don&apos;t see your repository?{" "}
                             <a
-                                href="https://github.com/settings/installations"
+                                href="https://github.com/apps/shorlabs/installations/new"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-zinc-600 hover:text-zinc-900 underline underline-offset-2"
