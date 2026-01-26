@@ -25,12 +25,6 @@ class ConnectRequest(BaseModel):
     installation_id: Optional[str] = None
     setup_action: Optional[str] = None
 
-@router.get("/auth-url")
-async def get_auth_url():
-    """Get the GitHub OAuth authorization URL."""
-    if not GITHUB_CLIENT_ID:
-        raise HTTPException(status_code=500, detail="GITHUB_CLIENT_ID not configured")
-        
 # GitHub App Slug (optional, for granular installation)
 GITHUB_APP_SLUG = os.environ.get("GITHUB_APP_SLUG")
 

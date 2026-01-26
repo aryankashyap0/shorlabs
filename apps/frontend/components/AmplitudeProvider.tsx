@@ -85,7 +85,7 @@ export function AmplitudeProvider({ children }: AmplitudeProviderProps) {
 
             // BLOCKLIST: Don't track these user IDs (developers/test accounts)
             const BLOCKED_USER_IDS = [
-                'user_38nWJoyCxzEptU1hhowxNskhxAj', // Your dev account
+                'user_38nfbFavjwbdg73ZL769Atirc7B', // Your dev account
             ];
 
             if (BLOCKED_USER_IDS.includes(userId)) {
