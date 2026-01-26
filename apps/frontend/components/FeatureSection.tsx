@@ -7,10 +7,10 @@ import {
     Key,
     Cpu,
     Clock,
-    FileText,
-    Shield,
-    Sparkles,
     Terminal,
+    Github,
+    DollarSign,
+    ServerOff,
 } from "lucide-react";
 
 const features = [
@@ -30,7 +30,7 @@ const features = [
         icon: Globe,
         title: "Custom Subdomains",
         description:
-            "Every project gets a unique subdomain, instantly accessible after deployment.",
+            "Every project gets a unique project-name.shorlabs.com subdomain, instantly accessible.",
     },
     {
         icon: Key,
@@ -41,9 +41,8 @@ const features = [
     {
         icon: Cpu,
         title: "Configurable Compute",
-        badge: "Pro",
         description:
-            "Choose memory, timeout, and ephemeral storage based on your workload needs.",
+            "Choose memory (up to 4GB), timeout (up to 300s), and ephemeral storage for your workload.",
     },
     {
         icon: Clock,
@@ -58,23 +57,22 @@ const features = [
             "View real-time CloudWatch logs directly from the dashboard. Debug with ease.",
     },
     {
-        icon: Shield,
-        title: "Secure by Default",
+        icon: Github,
+        title: "GitHub Integration",
         description:
-            "Your code runs in isolated Lambda functions. No shared infrastructure.",
+            "Seamless OAuth authentication and direct repository access. Import any repo instantly.",
     },
     {
-        icon: Sparkles,
-        title: "Auto Scaling",
-        badge: "Coming Soon",
-        description:
-            "Scale automatically from zero to thousands of requests without configuration.",
-    },
-    {
-        icon: FileText,
+        icon: DollarSign,
         title: "Pay-Per-Use",
         description:
-            "Built on AWS Lambda, so you only pay for actual compute time. No idle costs.",
+            "Built on AWS Lambda—pay only for actual compute time. No idle servers, no wasted money.",
+    },
+    {
+        icon: ServerOff,
+        title: "Zero Infrastructure",
+        description:
+            "No servers to provision, no containers to manage. Deploy your code and forget the rest.",
     },
 ];
 
