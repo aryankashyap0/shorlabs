@@ -82,13 +82,13 @@ export default function SectionNavigation() {
                                 disabled={!isLoaded}
                                 className="text-sm bg-gray-900 text-white hover:bg-gray-800 px-4 py-2 rounded-lg transition-colors"
                             >
-                                Get Started
+                                Continue with GitHub
                             </Button>
                         </SignedOut>
                         <SignedIn>
                             <Link href="/projects">
                                 <Button className="text-sm bg-gray-900 text-white hover:bg-gray-800 px-4 py-2 rounded-lg transition-colors">
-                                    Dashboard
+                                    Go to Projects
                                 </Button>
                             </Link>
                         </SignedIn>
@@ -140,13 +140,13 @@ export default function SectionNavigation() {
                                 disabled={!isLoaded}
                                 className="w-full text-sm bg-gray-900 text-white hover:bg-gray-800 py-2.5 rounded-lg transition-colors"
                             >
-                                Get Started
+                                Continue with GitHub
                             </Button>
                         </SignedOut>
                         <SignedIn>
                             <Link href="/projects" className="block">
                                 <Button className="w-full text-sm bg-gray-900 text-white hover:bg-gray-800 py-2.5 rounded-lg transition-colors">
-                                    Dashboard
+                                    Go to Projects
                                 </Button>
                             </Link>
                         </SignedIn>

@@ -57,13 +57,13 @@ const HeroSection = () => {
                                 disabled={!isLoaded}
                                 className="text-sm bg-gray-900 text-white hover:bg-gray-800 px-5 py-2.5 rounded-lg transition-colors"
                             >
-                                Start Deploying
+                                Continue with GitHub
                             </Button>
                         </SignedOut>
                         <SignedIn>
                             <Link href="/projects">
                                 <Button className="text-sm bg-gray-900 text-white hover:bg-gray-800 px-5 py-2.5 rounded-lg transition-colors">
-                                    Go to Dashboard
+                                    Go to Projects
                                 </Button>
                             </Link>
                         </SignedIn>
@@ -104,7 +104,7 @@ const HeroSection = () => {
                         />
                     </div>
 
-                                   </div>
+                </div>
             </div>
         </section>
     );
