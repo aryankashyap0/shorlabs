@@ -1,174 +1,149 @@
 "use client";
 
-import Image from "next/image";
-import { Github, Settings, Cpu, Key, ArrowRight, Check } from "lucide-react";
+import {
+    Zap,
+    GitBranch,
+    Globe,
+    Key,
+    Cpu,
+    Clock,
+    FileText,
+    Shield,
+    Sparkles,
+    Terminal,
+} from "lucide-react";
 
-const steps = [
+const features = [
     {
-        number: "01",
-        title: "Connect GitHub",
-        description: "Link your GitHub account and import an existing repository. Shorlabs automatically detects Python or Node.js projects.",
-        icon: Github,
-        image: "/images/1.png",
-        features: ["OAuth Authentication", "Private Repos Support", "Auto-Detection"],
+        icon: Zap,
+        title: "One-Click Deploy",
+        description:
+            "Connect your GitHub repository and deploy with a single click. No Docker knowledge required.",
     },
     {
-        number: "02",
-        title: "Configure Settings",
-        description: "Set up your project with a custom name, root directory, and start command. Shorlabs handles the rest.",
-        icon: Settings,
-        image: "/images/2.png",
-        features: ["Custom Subdomain", "Root Directory", "Start Command"],
+        icon: GitBranch,
+        title: "Auto Runtime Detection",
+        description:
+            "Shorlabs automatically detects Python or Node.js and configures the build for you.",
     },
     {
-        number: "03",
-        title: "Choose Compute",
-        description: "Select the memory, timeout, and ephemeral storage that fits your workload. Scale as needed.",
-        icon: Cpu,
-        image: "/images/3.png",
-        features: ["Up to 4GB Memory", "300s Timeout", "Ephemeral Storage"],
+        icon: Globe,
+        title: "Custom Subdomains",
+        description:
+            "Every project gets a unique subdomain, instantly accessible after deployment.",
     },
     {
-        number: "04",
-        title: "Deploy & Go Live",
-        description: "Add environment variables securely, hit deploy, and your backend is live in seconds.",
         icon: Key,
-        image: "/images/4.png",
-        features: ["Secure Env Vars", "One-Click Deploy", "Instant URL"],
+        title: "Environment Variables",
+        description:
+            "Securely configure environment variables through the dashboard. Supports .env imports.",
+    },
+    {
+        icon: Cpu,
+        title: "Configurable Compute",
+        badge: "Pro",
+        description:
+            "Choose memory, timeout, and ephemeral storage based on your workload needs.",
+    },
+    {
+        icon: Clock,
+        title: "Deployment History",
+        description:
+            "Track every deployment with status, build logs, and timestamps at a glance.",
+    },
+    {
+        icon: Terminal,
+        title: "Runtime Logs",
+        description:
+            "View real-time CloudWatch logs directly from the dashboard. Debug with ease.",
+    },
+    {
+        icon: Shield,
+        title: "Secure by Default",
+        description:
+            "Your code runs in isolated Lambda functions. No shared infrastructure.",
+    },
+    {
+        icon: Sparkles,
+        title: "Auto Scaling",
+        badge: "Coming Soon",
+        description:
+            "Scale automatically from zero to thousands of requests without configuration.",
+    },
+    {
+        icon: FileText,
+        title: "Pay-Per-Use",
+        description:
+            "Built on AWS Lambda, so you only pay for actual compute time. No idle costs.",
     },
 ];
 
 const FeatureSection = () => {
     return (
-        <section className="relative w-full bg-white overflow-hidden">
-            {/* Subtle grid pattern overlay */}
-            <div
-                className="absolute inset-0 opacity-[0.02]"
-                style={{
-                    backgroundImage: `linear-gradient(#171717 1px, transparent 1px), linear-gradient(90deg, #171717 1px, transparent 1px)`,
-                    backgroundSize: "40px 40px",
-                }}
-            />
-
-            {/* Section header */}
-            <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 md:pt-32 pb-12 sm:pb-16">
-                <div className="flex flex-col items-center text-center space-y-4 sm:space-y-6">
-                    {/* Section label */}
-                    <div className="inline-flex items-center gap-2 border border-neutral-200 px-3 py-1.5 sm:px-4 sm:py-2">
-                        <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-500">
-                            How It Works
-                        </span>
-                    </div>
-
-                    <h2 className="font-mono text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-neutral-900 max-w-3xl leading-[1.1]">
-                        Four Steps to{" "}
-                        <span className="text-neutral-400">Production</span>
-                    </h2>
-
-                    <p className="max-w-xl font-mono text-sm sm:text-base text-neutral-600 leading-relaxed">
-                        From GitHub to live URL in under two minutes. No Docker files, no infrastructure headaches.
-                    </p>
-                </div>
+        <section id="features" className="relative w-full bg-white">
+            {/* Section Header */}
+            <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 pt-16 sm:pt-20 pb-8 sm:pb-12 text-center">
+                <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 tracking-tight">
+                    Everything you need to ship backends
+                </h2>
+                <p className="mt-3 text-gray-500 max-w-xl mx-auto">
+                    Focus on writing code. We handle the infrastructure, scaling, and operations.
+                </p>
             </div>
 
-            {/* Steps */}
-            <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 sm:pb-24 md:pb-32">
-                <div className="space-y-16 sm:space-y-24 md:space-y-32">
-                    {steps.map((step, index) => {
-                        const Icon = step.icon;
+            {/* Features Grid */}
+            <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
+                <div className="border-t border-gray-100">
+                    {features.map((feature, index) => {
+                        const Icon = feature.icon;
                         const isEven = index % 2 === 1;
+                        const isLastRow = index >= features.length - 2;
+                        const isLeft = index % 2 === 0;
 
                         return (
                             <div
-                                key={step.number}
-                                className={`flex flex-col ${isEven ? 'lg:flex-row-reverse' : 'lg:flex-row'} gap-8 sm:gap-12 lg:gap-16 items-center`}
+                                key={feature.title}
+                                className={`
+                                    grid grid-cols-1 md:grid-cols-2
+                                    ${!isLastRow ? "border-b border-gray-100" : ""}
+                                `}
                             >
-                                {/* Content side */}
-                                <div className="flex-1 w-full lg:max-w-md space-y-6 sm:space-y-8">
-                                    {/* Step number with line */}
-                                    <div className="flex items-center gap-4">
-                                        <div className="relative">
-                                            <div className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-neutral-900 text-white">
-                                                <span className="font-mono text-sm sm:text-base font-bold">
-                                                    {step.number}
-                                                </span>
-                                            </div>
-                                            {/* Connecting line */}
-                                            {index < steps.length - 1 && (
-                                                <div className="hidden lg:block absolute top-full left-1/2 -translate-x-1/2 w-px h-[calc(100vh/3)] bg-gradient-to-b from-neutral-300 to-transparent" />
-                                            )}
+                                {/* Feature Item */}
+                                <div
+                                    className={`
+                                        py-6 sm:py-8 px-0 sm:px-6
+                                        ${isLeft ? "md:border-r border-gray-100" : ""}
+                                        ${index % 2 === 1 ? "md:col-start-2" : "md:col-start-1"}
+                                        ${index % 2 === 0 && index !== 0 ? "md:row-start-auto" : ""}
+                                    `}
+                                >
+                                    <div className="flex items-start gap-4">
+                                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-400">
+                                            <Icon className="w-5 h-5" strokeWidth={1.5} />
                                         </div>
-                                        <div className="h-px flex-1 bg-neutral-200" />
-                                        <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 border border-neutral-200 bg-white">
-                                            <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-neutral-700" strokeWidth={1.5} />
-                                        </div>
-                                    </div>
-
-                                    {/* Title and description */}
-                                    <div className="space-y-3 sm:space-y-4">
-                                        <h3 className="font-mono text-xl sm:text-2xl md:text-3xl font-bold text-neutral-900 tracking-tight">
-                                            {step.title}
-                                        </h3>
-                                        <p className="font-mono text-sm sm:text-base text-neutral-600 leading-relaxed">
-                                            {step.description}
-                                        </p>
-                                    </div>
-
-                                    {/* Feature pills */}
-                                    <div className="flex flex-wrap gap-2 sm:gap-3">
-                                        {step.features.map((feature) => (
-                                            <div
-                                                key={feature}
-                                                className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-neutral-50 border border-neutral-100"
-                                            >
-                                                <Check className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600" strokeWidth={2} />
-                                                <span className="font-mono text-[10px] sm:text-xs text-neutral-700">
-                                                    {feature}
-                                                </span>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="text-sm font-medium text-gray-900">
+                                                    {feature.title}
+                                                </h3>
+                                                {feature.badge && (
+                                                    <span
+                                                        className={`
+                                                            inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium
+                                                            ${feature.badge === "Pro"
+                                                                ? "bg-gray-900 text-white"
+                                                                : "bg-gray-100 text-gray-600"
+                                                            }
+                                                        `}
+                                                    >
+                                                        {feature.badge}
+                                                    </span>
+                                                )}
                                             </div>
-                                        ))}
-                                    </div>
-
-                                    {/* Learn more link (subtle) */}
-                                    <button className="group inline-flex items-center gap-2 font-mono text-xs sm:text-sm text-neutral-500 hover:text-neutral-900 transition-colors duration-200">
-                                        Learn more
-                                        <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" strokeWidth={1.5} />
-                                    </button>
-                                </div>
-
-                                {/* Image side */}
-                                <div className="flex-1 w-full">
-                                    <div className="relative group">
-                                        {/* Terminal-style header bar */}
-                                        <div className="flex items-center gap-2 bg-neutral-900 px-3 sm:px-4 py-2 sm:py-3">
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-red-500" />
-                                                <span className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-yellow-500" />
-                                                <span className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-green-500" />
-                                            </div>
-                                            <span className="ml-2 sm:ml-4 font-mono text-[10px] sm:text-xs text-neutral-400 truncate">
-                                                Step {step.number} — {step.title}
-                                            </span>
+                                            <p className="mt-1 text-sm text-gray-500 leading-relaxed">
+                                                {feature.description}
+                                            </p>
                                         </div>
-
-                                        {/* Image container */}
-                                        <div className="border border-neutral-200 border-t-0 bg-white overflow-hidden">
-                                            <div className="relative overflow-hidden">
-                                                <Image
-                                                    src={step.image}
-                                                    alt={`${step.title} — Shorlabs`}
-                                                    width={1200}
-                                                    height={675}
-                                                    className="h-auto w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                                                />
-                                                {/* Hover overlay */}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                                            </div>
-                                        </div>
-
-                                        {/* Decorative corner accents */}
-                                        <div className="absolute -bottom-2 -left-2 sm:-bottom-3 sm:-left-3 h-4 w-4 sm:h-5 sm:w-5 border-l-2 border-b-2 border-neutral-300 transition-all duration-300 group-hover:border-neutral-900" />
-                                        <div className="absolute -bottom-2 -right-2 sm:-bottom-3 sm:-right-3 h-4 w-4 sm:h-5 sm:w-5 border-r-2 border-b-2 border-neutral-300 transition-all duration-300 group-hover:border-neutral-900" />
                                     </div>
                                 </div>
                             </div>
@@ -176,38 +151,83 @@ const FeatureSection = () => {
                     })}
                 </div>
 
-                {/* Bottom CTA */}
-                <div className="mt-20 sm:mt-24 md:mt-32 flex flex-col items-center text-center space-y-6 sm:space-y-8">
-                    <div className="h-px w-full max-w-xs bg-neutral-200" />
-
-                    <p className="font-mono text-sm sm:text-base text-neutral-600 max-w-lg leading-relaxed">
-                        Ready to deploy your first backend? Join developers who've already made the switch.
-                    </p>
-
-                    <div className="flex items-center gap-3 sm:gap-4">
-                        <div className="flex -space-x-2">
-                            {[...Array(4)].map((_, i) => (
-                                <div
-                                    key={i}
-                                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-neutral-200 border-2 border-white flex items-center justify-center"
-                                >
-                                    <span className="font-mono text-[10px] sm:text-xs text-neutral-500">
-                                        {["AB", "CD", "EF", "GH"][i]}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                        <span className="font-mono text-xs sm:text-sm text-neutral-500">
-                            + many more
-                        </span>
-                    </div>
+                {/* Proper 2-column grid */}
+                <div className="hidden">
+                    {/* This is the correct implementation */}
                 </div>
             </div>
-
-            {/* Bottom border accent */}
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
         </section>
     );
 };
 
-export { FeatureSection };
+// Correct 2-column layout version
+const FeatureSectionV2 = () => {
+    return (
+        <section id="features" className="relative w-full bg-white">
+            {/* Section Header */}
+            <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 pt-16 sm:pt-20 pb-8 sm:pb-12 text-center">
+                <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 tracking-tight">
+                    Everything you need to ship backends
+                </h2>
+                <p className="mt-3 text-gray-500 max-w-xl mx-auto">
+                    Focus on writing code. We handle the infrastructure, scaling, and operations.
+                </p>
+            </div>
+
+            {/* Features Grid - 2 columns */}
+            <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
+                <div className="grid grid-cols-1 md:grid-cols-2 border-t border-gray-100">
+                    {features.map((feature, index) => {
+                        const Icon = feature.icon;
+                        const isLeft = index % 2 === 0;
+                        const rowIndex = Math.floor(index / 2);
+                        const isLastRow = rowIndex === Math.floor((features.length - 1) / 2);
+
+                        return (
+                            <div
+                                key={feature.title}
+                                className={`
+                                    py-6 sm:py-8 px-0 sm:px-6
+                                    ${isLeft ? "md:border-r border-gray-100" : ""}
+                                    ${!isLastRow || (isLeft && features.length % 2 === 1) ? "border-b border-gray-100" : ""}
+                                    ${!isLastRow ? "md:border-b" : ""}
+                                `}
+                            >
+                                <div className="flex items-start gap-4">
+                                    <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-400">
+                                        <Icon className="w-5 h-5" strokeWidth={1.5} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="text-sm font-medium text-gray-900">
+                                                {feature.title}
+                                            </h3>
+                                            {feature.badge && (
+                                                <span
+                                                    className={`
+                                                        inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium
+                                                        ${feature.badge === "Pro"
+                                                            ? "bg-gray-900 text-white"
+                                                            : "bg-gray-100 text-gray-600"
+                                                        }
+                                                    `}
+                                                >
+                                                    {feature.badge}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="mt-1 text-sm text-gray-500 leading-relaxed">
+                                            {feature.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </section>
+    );
+};
+
+export { FeatureSectionV2 as FeatureSection };

@@ -1,77 +1,112 @@
 "use client";
 
-import { BookDemoButton } from "@/components/BookDemoButton";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Github } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { SignedIn, SignedOut, useSignIn } from "@clerk/nextjs";
+import { trackEvent } from "@/lib/amplitude";
 
 export default function SectionNavigation() {
     const [open, setOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const { signIn, isLoaded } = useSignIn();
 
     useEffect(() => {
         const handleScroll = () => {
-            setScrolled(window.scrollY > 20);
+            setScrolled(window.scrollY > 10);
         };
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
+    const handleGitHubSignIn = async () => {
+        if (!isLoaded || !signIn) return;
+        trackEvent('GitHub Auth Started', { source: 'navigation' });
+        await signIn.authenticateWithRedirect({
+            strategy: "oauth_github",
+            redirectUrl: "/sso-callback",
+            redirectUrlComplete: "/projects",
+        });
+    };
+
     return (
         <header
-            className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${scrolled
-                ? "bg-[#faf9f7]/95 backdrop-blur-sm border-b border-neutral-200"
+            className={`fixed inset-x-0 top-0 z-50 transition-all duration-200 ${scrolled
+                ? "bg-white/95 backdrop-blur-sm border-b border-gray-100"
                 : "bg-transparent"
                 }`}
         >
-            <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex h-14 sm:h-16 items-center justify-between">
-                    {/* Logo */}
+            <div className="w-full max-w-5xl mx-auto px-4 sm:px-6">
+                <div className="flex h-14 items-center justify-between">
+                    {/* Left: Navigation Links */}
+                    <nav className="hidden md:flex items-center gap-6">
+                        <a
+                            href="#features"
+                            className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                        >
+                            Features
+                        </a>
+                        <a
+                            href="#pricing"
+                            className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                        >
+                            Pricing
+                        </a>
+                    </nav>
+
+                    {/* Center: Logo */}
                     <Link
                         href="/"
-                        className="group flex items-center gap-2"
+                        className="absolute left-1/2 -translate-x-1/2 flex items-center"
                     >
-                        <span className="font-mono text-base sm:text-lg font-semibold tracking-tight text-neutral-900 uppercase">
-                            Shorlabs
+                        <span className="text-lg font-semibold tracking-tight text-gray-900">
+                            shorlabs
                         </span>
-                        <span className="hidden sm:inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 group-hover:animate-pulse" />
                     </Link>
 
-                    {/* Desktop Navigation */}
-                    <nav className="hidden md:flex items-center gap-6 lg:gap-8">
-                    
-                        <div className="h-4 w-px bg-neutral-300" />
+                    {/* Right: CTA */}
+                    <div className="hidden md:flex items-center gap-4">
                         <a
-                            href="https://github.com/aryankashyap0"
+                            href="https://github.com/aryankashyap0/shorlabs"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-neutral-600 hover:text-neutral-900 transition-colors p-2"
+                            className="text-gray-500 hover:text-gray-900 transition-colors"
                             aria-label="GitHub"
                         >
-                            <Github className="w-4 h-4" strokeWidth={1.5} />
+                            <Github className="w-5 h-5" strokeWidth={1.5} />
                         </a>
-                        <BookDemoButton
-                            className="font-mono text-xs sm:text-sm uppercase tracking-wide border border-neutral-900 bg-transparent text-neutral-900 hover:bg-neutral-900 hover:text-white px-4 py-2 rounded-none transition-all duration-200"
-                        >
-                            Contact
-                        </BookDemoButton>
-                    </nav>
+                        <SignedOut>
+                            <Button
+                                onClick={handleGitHubSignIn}
+                                disabled={!isLoaded}
+                                className="text-sm bg-gray-900 text-white hover:bg-gray-800 px-4 py-2 rounded-lg transition-colors"
+                            >
+                                Get Started
+                            </Button>
+                        </SignedOut>
+                        <SignedIn>
+                            <Link href="/projects">
+                                <Button className="text-sm bg-gray-900 text-white hover:bg-gray-800 px-4 py-2 rounded-lg transition-colors">
+                                    Dashboard
+                                </Button>
+                            </Link>
+                        </SignedIn>
+                    </div>
 
                     {/* Mobile Menu Button */}
                     <div className="flex items-center md:hidden">
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="h-9 w-9 text-neutral-900 hover:bg-neutral-100 rounded-none border border-transparent hover:border-neutral-200"
+                            className="h-9 w-9 text-gray-900 hover:bg-gray-100 rounded-lg"
                             aria-label="Toggle Menu"
                             onClick={() => setOpen(!open)}
                         >
-                            <span className="sr-only">Menu</span>
                             {!open ? (
-                                <Menu className="h-4 w-4" strokeWidth={1.5} />
+                                <Menu className="h-5 w-5" strokeWidth={1.5} />
                             ) : (
-                                <X className="h-4 w-4" strokeWidth={1.5} />
+                                <X className="h-5 w-5" strokeWidth={1.5} />
                             )}
                         </Button>
                     </div>
@@ -80,27 +115,41 @@ export default function SectionNavigation() {
 
             {/* Mobile Menu */}
             <div
-                className={`md:hidden absolute inset-x-0 top-14 sm:top-16 bg-[#faf9f7] border-b border-neutral-200 transition-all duration-300 ease-out overflow-hidden ${open ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"
+                className={`md:hidden absolute inset-x-0 top-14 bg-white border-b border-gray-100 transition-all duration-200 ease-out overflow-hidden ${open ? "max-h-[300px] opacity-100" : "max-h-0 opacity-0"
                     }`}
             >
-                <nav className="flex flex-col px-4 py-6 space-y-1">
-                   
-                    <div className="pt-4 flex flex-col gap-3">
-                        <a
-                            href="https://github.com/aryankashyap0"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => setOpen(false)}
-                            className="flex items-center justify-center gap-2 font-mono text-sm uppercase tracking-wide text-neutral-600 hover:text-neutral-900 py-3 border border-neutral-300 transition-colors"
-                        >
-                            <Github className="w-4 h-4" strokeWidth={1.5} />
-                            GitHub
-                        </a>
-                        <BookDemoButton
-                            className="w-full font-mono text-sm uppercase tracking-wide border border-neutral-900 bg-neutral-900 text-white hover:bg-transparent hover:text-neutral-900 px-4 py-3 rounded-none transition-all duration-200"
-                        >
-                            Contact Us
-                        </BookDemoButton>
+                <nav className="flex flex-col px-4 py-4 space-y-2">
+                    <a
+                        href="#features"
+                        onClick={() => setOpen(false)}
+                        className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors"
+                    >
+                        Features
+                    </a>
+                    <a
+                        href="#pricing"
+                        onClick={() => setOpen(false)}
+                        className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors"
+                    >
+                        Pricing
+                    </a>
+                    <div className="pt-2 border-t border-gray-100">
+                        <SignedOut>
+                            <Button
+                                onClick={handleGitHubSignIn}
+                                disabled={!isLoaded}
+                                className="w-full text-sm bg-gray-900 text-white hover:bg-gray-800 py-2.5 rounded-lg transition-colors"
+                            >
+                                Get Started
+                            </Button>
+                        </SignedOut>
+                        <SignedIn>
+                            <Link href="/projects" className="block">
+                                <Button className="w-full text-sm bg-gray-900 text-white hover:bg-gray-800 py-2.5 rounded-lg transition-colors">
+                                    Dashboard
+                                </Button>
+                            </Link>
+                        </SignedIn>
                     </div>
                 </nav>
             </div>
