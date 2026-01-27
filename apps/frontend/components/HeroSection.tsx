@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { SignedIn, SignedOut } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -15,6 +15,8 @@ const GitHubLogo = () => (
 );
 
 const HeroSection = () => {
+    const { isLoaded, isSignedIn } = useAuth();
+
     return (
         <section className="relative w-full bg-white overflow-hidden">
             {/* Hero Content */}
@@ -42,16 +44,18 @@ const HeroSection = () => {
 
                     {/* CTA Buttons */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2">
-                        <SignedOut>
-                            <GoogleSignInButton source="hero_section" />
-                        </SignedOut>
-                        <SignedIn>
+                        {!isLoaded ? (
+                            // Skeleton button while auth loads - prevents layout shift
+                            <div className="h-10 w-[186px] bg-zinc-200 rounded-full animate-pulse" />
+                        ) : isSignedIn ? (
                             <Link href="/projects">
                                 <Button className="text-sm bg-gray-900 text-white hover:bg-gray-800 px-5 py-2.5 rounded-lg transition-colors">
                                     Go to Projects
                                 </Button>
                             </Link>
-                        </SignedIn>
+                        ) : (
+                            <GoogleSignInButton source="hero_section" />
+                        )}
 
                         <Link
                             href="https://github.com/aryankashyap0/shorlabs"
