@@ -308,22 +308,48 @@ export default function ImportRepositoryPage() {
                         <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
                     </div>
                 ) : pageState.status === 'error' ? (
-                    // Error state with retry
-                    <div className="bg-white rounded-2xl border border-zinc-200 p-12 text-center">
-                        <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
-                            <AlertCircle className="h-6 w-6 text-red-500" />
+                    // Error state - show reconnect button if GitHub token issue
+                    pageState.message.toLowerCase().includes('token') ||
+                    pageState.message.toLowerCase().includes('expired') ||
+                    pageState.message.toLowerCase().includes('invalid') ||
+                    pageState.message.toLowerCase().includes('reconnect') ? (
+                        // GitHub connection issue - show Connect button
+                        <div className="bg-white rounded-2xl border border-zinc-200 p-12 text-center hover:shadow-lg hover:shadow-zinc-900/5 transition-shadow">
+                            <div className="w-16 h-16 rounded-2xl bg-zinc-900 flex items-center justify-center mx-auto mb-6">
+                                <Github className="h-8 w-8 text-white" />
+                            </div>
+                            <h2 className="text-xl font-semibold text-zinc-900 mb-2">
+                                Reconnect GitHub
+                            </h2>
+                            <p className="text-sm text-zinc-500 mb-8 max-w-sm mx-auto">
+                                Your GitHub connection has expired. Please reconnect to continue.
+                            </p>
+                            <Button
+                                onClick={handleConnectGitHub}
+                                className="bg-zinc-900 hover:bg-zinc-800 text-white rounded-full h-12 px-8 shadow-lg shadow-zinc-900/10"
+                            >
+                                <Github className="h-5 w-5 mr-2" />
+                                Reconnect GitHub
+                            </Button>
                         </div>
-                        <h2 className="text-lg font-semibold text-zinc-900 mb-2">Something went wrong</h2>
-                        <p className="text-sm text-zinc-500 mb-6 max-w-sm mx-auto">{pageState.message}</p>
-                        <Button
-                            onClick={() => initializePage()}
-                            variant="outline"
-                            className="rounded-full"
-                        >
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            Try Again
-                        </Button>
-                    </div>
+                    ) : (
+                        // Generic error - show retry button
+                        <div className="bg-white rounded-2xl border border-zinc-200 p-12 text-center">
+                            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                                <AlertCircle className="h-6 w-6 text-red-500" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-zinc-900 mb-2">Something went wrong</h2>
+                            <p className="text-sm text-zinc-500 mb-6 max-w-sm mx-auto">{pageState.message}</p>
+                            <Button
+                                onClick={() => initializePage()}
+                                variant="outline"
+                                className="rounded-full"
+                            >
+                                <RefreshCw className="h-4 w-4 mr-2" />
+                                Try Again
+                            </Button>
+                        </div>
+                    )
                 ) : pageState.status === 'not_connected' ? (
                     // Connect GitHub CTA
                     <div className="bg-white rounded-2xl border border-zinc-200 p-12 text-center hover:shadow-lg hover:shadow-zinc-900/5 transition-shadow">
