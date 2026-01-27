@@ -57,14 +57,13 @@ export const GoogleSignInButton = ({
             onClick={handleGoogleSignIn}
             disabled={!isLoaded}
             className={`
-                inline-flex items-center justify-center gap-3
+                inline-flex items-center justify-center gap-2.5
                 h-10 px-6
-                bg-white text-zinc-700 font-medium text-sm
-                border border-zinc-300
+                bg-zinc-900 text-white font-medium text-sm
                 rounded-full
                 shadow-sm
-                hover:bg-zinc-50 hover:shadow
-                active:bg-zinc-100
+                hover:bg-zinc-800
+                active:bg-zinc-950
                 disabled:opacity-50 disabled:cursor-not-allowed
                 transition-all duration-150
                 cursor-pointer
