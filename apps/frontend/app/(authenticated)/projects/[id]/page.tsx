@@ -48,6 +48,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { UpgradeModal, useUpgradeModal } from "@/components/upgrade-modal"
 import { ComputeSettings } from "@/components/ComputeSettings"
+import { StartCommandInput } from "@/components/StartCommandInput"
 import { DeploymentLogs } from "@/components/DeploymentLogs"
 import { trackEvent } from "@/lib/amplitude"
 
@@ -898,61 +899,17 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                     {activeTab === "settings" && (
                         <div className="space-y-6">
                             {/* Start Command */}
-                            <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden">
-                                <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
-                                    <div className="flex items-center gap-3">
-                                        <Terminal className="h-5 w-5 text-zinc-400" />
-                                        <h3 className="font-semibold text-zinc-900">Start Command</h3>
-                                    </div>
-                                    {!editingStartCommand && (
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={startEditingStartCommand}
-                                            className="text-zinc-500 hover:text-zinc-900"
-                                        >
-                                            Edit
-                                        </Button>
-                                    )}
-                                </div>
-
-                                <div className="p-6">
-                                    {editingStartCommand ? (
-                                        <div className="space-y-4">
-                                            <Input
-                                                placeholder="uvicorn main:app --host 0.0.0.0 --port 8080"
-                                                value={startCommandValue}
-                                                onChange={(e) => setStartCommandValue(e.target.value)}
-                                                className="font-mono text-sm h-12 rounded-xl"
-                                            />
-                                            <p className="text-sm text-zinc-500">
-                                                The command to start your application. Must listen on port 8080.
-                                            </p>
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() => setEditingStartCommand(false)}
-                                                    className="rounded-full"
-                                                >
-                                                    Cancel
-                                                </Button>
-                                                <Button
-                                                    onClick={saveStartCommand}
-                                                    disabled={savingStartCommand}
-                                                    className="bg-zinc-900 hover:bg-zinc-800 rounded-full"
-                                                >
-                                                    {savingStartCommand && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                                                    Save
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="bg-zinc-50 rounded-xl px-4 py-3 font-mono text-sm text-zinc-700 border border-zinc-100">
-                                            {project.start_command || "No start command configured"}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                            <StartCommandInput
+                                value={editingStartCommand ? startCommandValue : (project.start_command || "")}
+                                onChange={setStartCommandValue}
+                                showPortWarning={false}
+                                readOnly={!editingStartCommand}
+                                isEditing={editingStartCommand}
+                                onStartEdit={startEditingStartCommand}
+                                onCancelEdit={() => setEditingStartCommand(false)}
+                                onSave={saveStartCommand}
+                                isSaving={savingStartCommand}
+                            />
 
                             {/* Environment Variables */}
                             <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden">
