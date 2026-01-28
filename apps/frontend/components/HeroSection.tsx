@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useAuth } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -66,17 +65,19 @@ const HeroSection = () => {
                 {/* Gradient Background */}
                 <div className="absolute inset-0 bg-gradient-to-b from-white via-rose-50/50 to-rose-100/70" />
 
-                {/* Screenshot Container */}
+                {/* Video Container */}
                 <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-16 sm:pb-24">
                     <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl shadow-gray-200/50 border border-gray-200/60">
-                        <Image
-                            src="/images/f.png"
-                            alt="Shorlabs Dashboard"
-                            width={1920}
-                            height={1080}
+                        <video
+                            src="/Shorlabs-Demo.mp4"
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
                             className="w-full h-auto"
-                            priority
-                        />
+                        >
+                            Your browser does not support the video tag.
+                        </video>
                     </div>
 
                 </div>
