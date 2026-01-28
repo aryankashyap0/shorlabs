@@ -7,7 +7,6 @@ import Link from "next/link";
 
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { GitHubButton } from "@/components/GitHubButton";
-import { BookDemoButton } from "@/components/BookDemoButton";
 
 const HeroSection = () => {
     const { isLoaded, isSignedIn } = useAuth();
@@ -53,8 +52,6 @@ const HeroSection = () => {
                         )}
 
                         <GitHubButton />
-
-                        <BookDemoButton>Schedule a Call</BookDemoButton>
                     </div>
 
                     {/* Small Text */}

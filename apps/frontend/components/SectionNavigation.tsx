@@ -5,6 +5,7 @@ import { Menu, X, Github } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { trackEvent } from "@/lib/amplitude";
+import { BookDemoButton } from "@/components/BookDemoButton";
 
 export default function SectionNavigation() {
     const [open, setOpen] = useState(false);
@@ -66,13 +67,12 @@ export default function SectionNavigation() {
                         >
                             <Github className="w-5 h-5" strokeWidth={1.5} />
                         </a>
-                        <Link href="mailto:kashyaparyan093@gmail.com">
-                            <Button
-                                className="text-sm bg-gray-900 text-white hover:bg-gray-800 px-4 py-2 rounded-lg transition-colors"
-                            >
-                                Contact Us
-                            </Button>
-                        </Link>
+                        <BookDemoButton
+                            className="text-sm px-4 py-2 rounded-lg"
+                            size="sm"
+                        >
+                            Schedule a Call
+                        </BookDemoButton>
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -115,11 +115,9 @@ export default function SectionNavigation() {
                         Pricing
                     </a>
                     <div className="pt-2 border-t border-gray-100">
-                        <Link href="mailto:kashyaparyan093@gmail.com" className="w-full">
-                            <Button className="w-full text-sm bg-gray-900 text-white hover:bg-gray-800 py-2.5 rounded-lg transition-colors">
-                                Contact Us
-                            </Button>
-                        </Link>
+                        <BookDemoButton className="w-full text-sm py-2.5 rounded-lg">
+                            Schedule a Call
+                        </BookDemoButton>
                     </div>
                 </nav>
             </div>
