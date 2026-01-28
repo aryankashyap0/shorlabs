@@ -73,6 +73,7 @@ def _run_deployment_sync(
     github_token: Optional[str],
     root_directory: str = "./",
     start_command: str = "uvicorn main:app --host 0.0.0.0 --port 8080",
+    env_vars: Optional[dict] = None,
     memory: int = 1024,
     timeout: int = 30,
     ephemeral_storage: int = 512,
@@ -101,7 +102,7 @@ def _run_deployment_sync(
             github_token=github_token,
             root_directory=root_directory,
             start_command=start_command,
-            env_vars=None,  # Env vars are updated separately via Lambda
+            env_vars=env_vars,  # Pass env vars to Lambda configuration
             memory=memory,
             timeout=timeout,
             ephemeral_storage=ephemeral_storage,
@@ -148,6 +149,7 @@ def send_deployment_to_sqs(
     github_token: Optional[str],
     root_directory: str = "./",
     start_command: str = "uvicorn main:app --host 0.0.0.0 --port 8080",
+    env_vars: Optional[dict] = None,
     memory: int = 1024,
     timeout: int = 30,
     ephemeral_storage: int = 512,
@@ -167,7 +169,7 @@ def send_deployment_to_sqs(
     if not os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
         # Running locally - use thread pool fallback
         def run_in_thread():
-            _run_deployment_sync(project_id, github_url, github_token, root_directory, start_command, memory, timeout, ephemeral_storage)
+            _run_deployment_sync(project_id, github_url, github_token, root_directory, start_command, env_vars, memory, timeout, ephemeral_storage)
         thread = threading.Thread(target=run_in_thread)
         thread.start()
         print(f"📤 Local: Deployment started in background thread for project {project_id}")
@@ -181,7 +183,7 @@ def send_deployment_to_sqs(
     if not queue_url:
         print("⚠️ DEPLOY_QUEUE_URL not set, falling back to thread-based execution")
         def run_in_thread():
-            _run_deployment_sync(project_id, github_url, github_token, root_directory, start_command, memory, timeout, ephemeral_storage)
+            _run_deployment_sync(project_id, github_url, github_token, root_directory, start_command, env_vars, memory, timeout, ephemeral_storage)
         thread = threading.Thread(target=run_in_thread)
         thread.start()
         return
@@ -192,6 +194,7 @@ def send_deployment_to_sqs(
         "github_token": github_token,
         "root_directory": root_directory,
         "start_command": start_command,
+        "env_vars": env_vars or {},
         "memory": memory,
         "timeout": timeout,
         "ephemeral_storage": ephemeral_storage,
@@ -214,70 +217,7 @@ def send_deployment_to_sqs(
 # ─────────────────────────────────────────────────────────────
 
 
-def send_deployment_to_sqs(
-    project_id: str,
-    github_url: str,
-    github_token: Optional[str],
-    root_directory: str = "./",
-    start_command: str = "uvicorn main:app --host 0.0.0.0 --port 8080",
-    memory: int = 1024,
-    timeout: int = 30,
-    ephemeral_storage: int = 512,
-):
-    """
-    Send deployment task to SQS queue for background processing.
-    
-    This is the industry-standard approach for Lambda background tasks:
-    - SQS provides automatic retries on failure
-    - Dead-letter queue captures failed deployments
-    - Same Lambda handles both HTTP requests and SQS events
-    - No risk of recursive invocation loops
-    """
-    import time
-    
-    # Check if running on Lambda
-    if not os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
-        # Running locally - use thread pool fallback
-        def run_in_thread():
-            _run_deployment_sync(project_id, github_url, github_token, root_directory, start_command, memory, timeout, ephemeral_storage)
-        thread = threading.Thread(target=run_in_thread)
-        thread.start()
-        print(f"📤 Local: Deployment started in background thread for project {project_id}")
-        return
-    
-    # Running on Lambda - send message to SQS queue
-    sqs_client = boto3.client("sqs")
-    
-    # Get queue URL from environment
-    queue_url = os.environ.get("DEPLOY_QUEUE_URL")
-    if not queue_url:
-        print("⚠️ DEPLOY_QUEUE_URL not set, falling back to thread-based execution")
-        def run_in_thread():
-            _run_deployment_sync(project_id, github_url, github_token, root_directory, start_command, memory, timeout, ephemeral_storage)
-        thread = threading.Thread(target=run_in_thread)
-        thread.start()
-        return
-    
-    message_body = {
-        "project_id": project_id,
-        "github_url": github_url,
-        "github_token": github_token,
-        "root_directory": root_directory,
-        "start_command": start_command,
-        "memory": memory,
-        "timeout": timeout,
-        "ephemeral_storage": ephemeral_storage,
-    }
-    
-    response = sqs_client.send_message(
-        QueueUrl=queue_url,
-        MessageBody=json.dumps(message_body),
-        # Use project_id as deduplication to prevent duplicate deployments
-        MessageGroupId="deployments",  # Required for FIFO queue
-        MessageDeduplicationId=f"{project_id}-{int(time.time())}",
-    )
-    
-    print(f"📤 Deployment queued for project {project_id}, MessageId: {response['MessageId']}")
+
 
 
 
@@ -328,6 +268,7 @@ async def create_new_project(
         github_token,
         root_directory,
         request.start_command,
+        request.env_vars,  # Pass env_vars to deployment
         memory,
         timeout,
         ephemeral_storage,
@@ -592,6 +533,7 @@ async def redeploy_project(
     # Get root_directory and start_command from stored project
     root_directory = project.get("root_directory", "./")
     start_command = project.get("start_command", "uvicorn main:app --host 0.0.0.0 --port 8080")
+    env_vars = project.get("env_vars", {})
     # Convert Decimal to int (DynamoDB returns Decimal which isn't JSON serializable)
     memory = int(project.get("memory", 1024))
     timeout = int(project.get("timeout", 30))
@@ -604,6 +546,7 @@ async def redeploy_project(
         github_token,
         root_directory,
         start_command,
+        env_vars,
         memory,
         timeout,
         ephemeral_storage,

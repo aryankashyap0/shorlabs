@@ -106,6 +106,7 @@ def _handle_sqs_event(event: dict) -> dict:
                 github_token=body.get("github_token"),
                 root_directory=body.get("root_directory", "./"),
                 start_command=body.get("start_command", "uvicorn main:app --host 0.0.0.0 --port 8080"),
+                env_vars=body.get("env_vars"),  # Pass env_vars from SQS message
                 memory=body.get("memory", 1024),
                 timeout=body.get("timeout", 30),
                 ephemeral_storage=body.get("ephemeral_storage", 512),
