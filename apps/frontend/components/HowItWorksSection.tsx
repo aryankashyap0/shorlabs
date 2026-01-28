@@ -6,26 +6,26 @@ import Image from "next/image";
 const steps = [
     {
         number: "01",
-        title: "Connect GitHub",
-        description: "Link your GitHub account and import an existing repository to get started.",
+        title: "Connect",
+        description: "Link your GitHub account and select a repository.",
         image: "/images/1.png",
     },
     {
         number: "02",
-        title: "Configure Settings",
-        description: "Set your project name, root directory, and start command.",
+        title: "Configure",
+        description: "Set project name, directory, and start command.",
         image: "/images/2.png",
     },
     {
         number: "03",
-        title: "Choose Compute",
-        description: "Select memory, timeout, and storage based on your workload.",
+        title: "Customize",
+        description: "Choose memory, timeout, and add environment variables.",
         image: "/images/3.png",
     },
     {
         number: "04",
-        title: "Deploy & Go Live",
-        description: "Add environment variables securely, then deploy with one click.",
+        title: "Deploy",
+        description: "One click. Your backend is live.",
         image: "/images/4.png",
     },
 ];
@@ -34,90 +34,135 @@ const HowItWorksSection = () => {
     const [activeStep, setActiveStep] = useState(0);
 
     return (
-        <section className="relative w-full bg-white">
+        <section className="relative w-full bg-gray-50">
             {/* Section Header */}
-            <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 pt-16 sm:pt-20 pb-8 sm:pb-12 text-center">
-                <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 tracking-tight">
-                    From GitHub to production in minutes
-                </h2>
-                <p className="mt-3 text-gray-500 max-w-xl mx-auto">
-                    Four simple steps to deploy your backend. No Docker, no YAML, no DevOps required.
-                </p>
-            </div>
-
-            {/* Steps Navigation */}
-            <div className="w-full max-w-5xl mx-auto px-4 sm:px-6">
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-0">
-                    {steps.map((step, index) => (
-                        <button
-                            key={step.number}
-                            onClick={() => setActiveStep(index)}
-                            className={`
-                                group flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 transition-all duration-200
-                                ${index === 0 ? "sm:rounded-l-lg" : ""}
-                                ${index === steps.length - 1 ? "sm:rounded-r-lg" : ""}
-                                ${activeStep === index
-                                    ? "bg-gray-900 text-white"
-                                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                                }
-                                ${index !== 0 ? "sm:border-l border-gray-200" : ""}
-                                rounded-lg sm:rounded-none
-                            `}
-                        >
-                            <span
-                                className={`
-                                    text-xs font-medium px-2 py-0.5 rounded
-                                    ${activeStep === index
-                                        ? "bg-white/20 text-white"
-                                        : "bg-gray-200 text-gray-500"
-                                    }
-                                `}
-                            >
-                                {step.number}
-                            </span>
-                            <span className="text-sm font-medium whitespace-nowrap">
-                                {step.title}
-                            </span>
-                        </button>
-                    ))}
+            <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 pt-16 sm:pt-20 pb-10 sm:pb-14">
+                <div className="text-center sm:text-left max-w-xl mx-auto sm:mx-0">
+                    <span className="text-xs font-medium tracking-wider text-gray-400 uppercase">
+                        How it works
+                    </span>
+                    <h2 className="mt-3 text-2xl sm:text-3xl font-semibold text-gray-900 tracking-tight">
+                        Deploy in four steps
+                    </h2>
+                    <p className="mt-3 text-gray-500 leading-relaxed">
+                        From repository to production URL. No DevOps required.
+                    </p>
                 </div>
             </div>
 
-            {/* Active Step Content */}
-            <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-16 sm:pb-24">
-                {/* Description */}
-                <p className="text-center text-gray-500 mb-6 sm:mb-8 max-w-lg mx-auto">
-                    {steps[activeStep].description}
-                </p>
+            {/* Main Content */}
+            <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
+                {/* Mobile & Tablet: Steps above image */}
+                {/* Desktop: Steps on left, image on right */}
+                <div className="flex flex-col lg:flex-row lg:gap-12">
 
-                {/* Image Container */}
-                <div className="relative rounded-xl sm:rounded-2xl overflow-hidden border border-gray-200 shadow-lg shadow-gray-100/50">
-                    <Image
-                        src={steps[activeStep].image}
-                        alt={`Step ${steps[activeStep].number}: ${steps[activeStep].title}`}
-                        width={1200}
-                        height={675}
-                        className="w-full h-auto transition-opacity duration-300"
-                        priority={activeStep === 0}
-                    />
-                </div>
+                    {/* Steps Navigation */}
+                    <div className="lg:w-1/3 mb-6 lg:mb-0">
+                        {/* Mobile: Horizontal scroll | Tablet: 2x2 grid | Desktop: Vertical list */}
+                        <div className="
+                            flex gap-2
+                            overflow-x-auto pb-2
+                            sm:grid sm:grid-cols-4 sm:overflow-visible sm:pb-0 sm:gap-3
+                            lg:flex lg:flex-col lg:gap-0
+                            -mx-4 px-4 sm:mx-0 sm:px-0
+                        ">
+                            {steps.map((step, index) => (
+                                <button
+                                    key={step.number}
+                                    onClick={() => setActiveStep(index)}
+                                    className={`
+                                        group relative flex items-center gap-3 
+                                        px-4 py-3 sm:px-3 sm:py-3 lg:px-4 lg:py-5
+                                        rounded-xl lg:rounded-none
+                                        transition-all duration-200 text-left 
+                                        flex-shrink-0 sm:flex-shrink
+                                        min-w-[120px] sm:min-w-0
+                                        ${activeStep === index
+                                            ? "bg-white shadow-sm sm:shadow-sm lg:shadow-none lg:bg-transparent"
+                                            : "bg-white/50 sm:bg-white/60 lg:bg-transparent hover:bg-white sm:hover:bg-white lg:hover:bg-transparent"
+                                        }
+                                        ${index !== steps.length - 1 ? "lg:border-b lg:border-gray-200" : ""}
+                                    `}
+                                >
+                                    {/* Step Number */}
+                                    <span
+                                        className={`
+                                            flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full
+                                            text-xs font-medium transition-all duration-200
+                                            ${activeStep === index
+                                                ? "bg-gray-900 text-white"
+                                                : "bg-gray-200 text-gray-500 group-hover:bg-gray-300"
+                                            }
+                                        `}
+                                    >
+                                        {step.number}
+                                    </span>
 
-                {/* Step Indicators (dots) */}
-                <div className="flex items-center justify-center gap-2 mt-6">
-                    {steps.map((_, index) => (
-                        <button
-                            key={index}
-                            onClick={() => setActiveStep(index)}
-                            className={`
-                                w-2 h-2 rounded-full transition-all duration-200
-                                ${activeStep === index
-                                    ? "bg-gray-900 w-4"
-                                    : "bg-gray-300 hover:bg-gray-400"
-                                }
-                            `}
-                            aria-label={`Go to step ${index + 1}`}
-                        />
-                    ))}
+                                    {/* Step Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <span
+                                            className={`
+                                                block text-sm font-medium transition-colors duration-200
+                                                ${activeStep === index ? "text-gray-900" : "text-gray-600"}
+                                            `}
+                                        >
+                                            {step.title}
+                                        </span>
+                                        {/* Description - Desktop only */}
+                                        <span className="hidden lg:block text-xs text-gray-400 mt-0.5 leading-relaxed">
+                                            {step.description}
+                                        </span>
+                                    </div>
+
+                                    {/* Active Indicator - Desktop only */}
+                                    <div
+                                        className={`
+                                            hidden lg:block absolute right-0 top-1/2 -translate-y-1/2 w-0.5 h-8 rounded-full
+                                            transition-all duration-200
+                                            ${activeStep === index ? "bg-gray-900" : "bg-transparent"}
+                                        `}
+                                    />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Image Display */}
+                    <div className="lg:w-2/3">
+                        <div className="relative rounded-xl sm:rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
+                            <Image
+                                src={steps[activeStep].image}
+                                alt={`Step ${steps[activeStep].number}: ${steps[activeStep].title}`}
+                                width={1200}
+                                height={675}
+                                className="w-full h-auto"
+                                priority={activeStep === 0}
+                            />
+                        </div>
+
+                        {/* Description - Mobile & Tablet only */}
+                        <p className="lg:hidden text-center text-sm text-gray-500 mt-4 px-4">
+                            {steps[activeStep].description}
+                        </p>
+
+                        {/* Progress Indicators */}
+                        <div className="flex items-center gap-1.5 mt-5 sm:mt-6 justify-center lg:justify-start">
+                            {steps.map((_, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setActiveStep(index)}
+                                    className={`
+                                        h-1 rounded-full transition-all duration-300
+                                        ${activeStep === index
+                                            ? "w-6 sm:w-8 bg-gray-900"
+                                            : "w-1.5 bg-gray-300 hover:bg-gray-400"
+                                        }
+                                    `}
+                                    aria-label={`Go to step ${index + 1}`}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

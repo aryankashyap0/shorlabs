@@ -4,121 +4,102 @@ import {
     Zap,
     GitBranch,
     Globe,
-    Key,
-    Cpu,
-    Clock,
     Terminal,
-    Github,
+    Cpu,
     DollarSign,
-    ServerOff,
 } from "lucide-react";
 
 const features = [
     {
         icon: Zap,
         title: "One-Click Deploy",
-        description:
-            "Connect your GitHub repository and deploy with a single click. No Docker knowledge required.",
+        description: "Connect GitHub and deploy instantly. No Docker, no YAML, no DevOps.",
+        highlight: true,
     },
     {
         icon: GitBranch,
-        title: "Auto Runtime Detection",
-        description:
-            "Shorlabs automatically detects Python or Node.js and configures the build for you.",
+        title: "Auto Detection",
+        description: "We detect Python or Node.js and configure the build automatically.",
+        highlight: false,
     },
     {
         icon: Globe,
-        title: "Custom Subdomains",
-        description:
-            "Every project gets a unique project-name.shorlabs.com subdomain, instantly accessible.",
-    },
-    {
-        icon: Key,
-        title: "Environment Variables",
-        description:
-            "Securely configure environment variables through the dashboard. Supports .env imports.",
-    },
-    {
-        icon: Cpu,
-        title: "Configurable Compute",
-        description:
-            "Choose memory (up to 4GB), timeout (up to 300s), and ephemeral storage for your workload.",
-    },
-    {
-        icon: Clock,
-        title: "Deployment History",
-        description:
-            "Track every deployment with status, build logs, and timestamps at a glance.",
+        title: "Instant Subdomains",
+        description: "Every project gets a unique .shorlabs.com URL, live in seconds.",
+        highlight: false,
     },
     {
         icon: Terminal,
-        title: "Runtime Logs",
-        description:
-            "View real-time logs directly from the dashboard. Debug issues as they happen.",
+        title: "Real-time Logs",
+        description: "Stream logs directly from your running functions. Debug in real-time.",
+        highlight: true,
     },
     {
-        icon: Github,
-        title: "GitHub Integration",
-        description:
-            "Seamless OAuth authentication and direct repository access. Import any repo instantly.",
+        icon: Cpu,
+        title: "Flexible Compute",
+        description: "Configure memory, timeout, and storage. Scale from hobby to production.",
+        highlight: false,
     },
     {
         icon: DollarSign,
-        title: "Pay-Per-Use",
-        description:
-            "Only pay for actual compute time. No idle servers, no monthly bills for unused capacity.",
-    },
-    {
-        icon: ServerOff,
-        title: "Zero Infrastructure",
-        description:
-            "No servers to provision, no containers to manage. Deploy your code and forget the rest.",
+        title: "Pay Per Request",
+        description: "Zero idle costs. You only pay when your code runs.",
+        highlight: false,
     },
 ];
 
 export const FeatureSection = () => {
     return (
         <section id="features" className="relative w-full bg-white">
-            <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 pt-16 sm:pt-20 pb-8 sm:pb-12 text-center">
-                <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 tracking-tight">
-                    Everything you need to ship backends
-                </h2>
-                <p className="mt-3 text-gray-500 max-w-xl mx-auto">
-                    Focus on writing code. We handle the infrastructure, scaling, and operations.
-                </p>
+            {/* Section Header */}
+            <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 pt-16 sm:pt-20 pb-10 sm:pb-14">
+                <div className="text-center sm:text-left max-w-xl mx-auto sm:mx-0">
+                    <span className="text-xs font-medium tracking-wider text-gray-400 uppercase">
+                        Features
+                    </span>
+                    <h2 className="mt-3 text-2xl sm:text-3xl font-semibold text-gray-900 tracking-tight">
+                        Everything you need to ship
+                    </h2>
+                    <p className="mt-3 text-gray-500 leading-relaxed">
+                        Focus on code. We handle the infrastructure.
+                    </p>
+                </div>
             </div>
 
+            {/* Feature Grid */}
             <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
-                <div className="grid grid-cols-1 md:grid-cols-2 border-t border-gray-100">
-                    {features.map((feature, index) => {
+                {/* Mobile: Stack | Tablet: 2 cols | Desktop: 3 cols */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-3 lg:gap-px lg:bg-gray-100 lg:rounded-2xl lg:overflow-hidden lg:border lg:border-gray-100">
+                    {features.map((feature) => {
                         const Icon = feature.icon;
-                        const isLeft = index % 2 === 0;
-                        const rowIndex = Math.floor(index / 2);
-                        const isLastRow = rowIndex === Math.floor((features.length - 1) / 2);
 
                         return (
                             <div
                                 key={feature.title}
-                                className={`
-                                    py-6 sm:py-8 px-0 sm:px-6
-                                    ${isLeft ? "md:border-r border-gray-100" : ""}
-                                    ${!isLastRow || (isLeft && features.length % 2 === 1) ? "border-b border-gray-100" : ""}
-                                    ${!isLastRow ? "md:border-b" : ""}
-                                `}
+                                className="
+                                    group relative bg-white p-5 sm:p-6 lg:p-8
+                                    rounded-xl sm:rounded-xl lg:rounded-none
+                                    border border-gray-100 sm:border-gray-100 lg:border-0
+                                    transition-colors duration-300 hover:bg-gray-50/50
+                                "
                             >
-                                <div className="flex items-start gap-4">
-                                    <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-400">
-                                        <Icon className="w-5 h-5" strokeWidth={1.5} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="text-sm font-medium text-gray-900">
-                                            {feature.title}
-                                        </h3>
-                                        <p className="mt-1 text-sm text-gray-500 leading-relaxed">
-                                            {feature.description}
-                                        </p>
-                                    </div>
+                                {/* Icon */}
+                                <div className="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-gray-50 text-gray-600 mb-4 transition-all duration-300 group-hover:bg-gray-100 group-hover:text-gray-900">
+                                    <Icon className="w-5 h-5 sm:w-[18px] sm:h-[18px]" strokeWidth={1.5} />
                                 </div>
+
+                                {/* Content */}
+                                <h3 className="text-base sm:text-sm font-medium text-gray-900 mb-1.5">
+                                    {feature.title}
+                                </h3>
+                                <p className="text-sm text-gray-500 leading-relaxed">
+                                    {feature.description}
+                                </p>
+
+                                {/* Subtle corner accent for highlighted items */}
+                                {feature.highlight && (
+                                    <div className="absolute top-4 right-4 sm:top-3 sm:right-3 w-1.5 h-1.5 rounded-full bg-gray-200 transition-colors duration-300 group-hover:bg-gray-400" />
+                                )}
                             </div>
                         );
                     })}

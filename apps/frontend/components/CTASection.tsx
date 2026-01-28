@@ -36,12 +36,12 @@ const CTASection = () => {
                     </p>
 
                     {/* CTA Buttons */}
-                    <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
+                    <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                         {!isLoaded ? (
-                            <div className="h-10 w-[186px] bg-zinc-100 rounded-lg animate-pulse" />
+                            <div className="h-10 w-full sm:w-auto bg-zinc-100 rounded-full animate-pulse" style={{ minWidth: '186px' }} />
                         ) : isSignedIn ? (
-                            <Link href="/projects">
-                                <Button className="group text-sm bg-gray-900 text-white hover:bg-gray-800 pl-5 pr-4 py-2.5 h-auto rounded-lg transition-all duration-200">
+                            <Link href="/projects" className="w-full sm:w-auto">
+                                <Button className="group w-full sm:w-auto text-sm bg-gray-900 text-white hover:bg-gray-800 px-6 h-10 rounded-full shadow-sm transition-all duration-200">
                                     <span>Go to Projects</span>
                                     <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-200 group-hover:translate-x-0.5" strokeWidth={1.5} />
                                 </Button>
@@ -50,7 +50,7 @@ const CTASection = () => {
                             <GoogleSignInButton source="cta_section" />
                         )}
 
-                        <GitHubButton />
+                        <GitHubButton className="w-full sm:w-auto" />
                     </div>
 
                     {/* Trust signal */}

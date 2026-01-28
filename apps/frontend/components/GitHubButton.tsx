@@ -5,6 +5,7 @@ import Link from "next/link";
 interface GitHubButtonProps {
     className?: string;
     text?: string;
+    fullWidth?: boolean;
 }
 
 // GitHub Invertocat logo SVG
@@ -17,6 +18,7 @@ const GitHubLogo = () => (
 export const GitHubButton = ({
     className = "",
     text = "View on GitHub",
+    fullWidth = false,
 }: GitHubButtonProps) => {
     return (
         <Link
@@ -31,6 +33,7 @@ export const GitHubButton = ({
                 hover:bg-zinc-800
                 active:bg-zinc-950
                 transition-all duration-150
+                ${fullWidth ? "w-full" : ""}
                 ${className}
             `}
         >
