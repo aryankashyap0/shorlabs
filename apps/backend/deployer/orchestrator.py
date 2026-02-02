@@ -18,6 +18,7 @@ from .aws import (
     create_or_update_lambda,
     delete_lambda,
     delete_ecr_repository,
+    delete_lambda_logs,
 )
 from .aws.ecr import get_ecr_repo_name
 
@@ -156,10 +157,13 @@ def delete_project_resources(github_url: str, function_name: Optional[str] = Non
     
     lambda_deleted = delete_lambda(project_name)
     ecr_deleted = delete_ecr_repository(get_ecr_repo_name(project_name))
+    # Delete CloudWatch log group for the Lambda function
+    logs_deleted = delete_lambda_logs(project_name)
     
     return {
         "lambda_deleted": lambda_deleted,
         "ecr_deleted": ecr_deleted,
+        "logs_deleted": logs_deleted,
     }
 
 

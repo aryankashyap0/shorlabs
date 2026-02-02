@@ -30,7 +30,6 @@ from api.db.dynamodb import (
 from deployer import deploy_project, delete_project_resources, extract_project_name
 from deployer.aws import (
     get_lambda_logs,
-    delete_lambda_logs,
 )
 from deployer.aws.ecr import get_ecr_repo_name
 
@@ -577,12 +576,8 @@ async def delete_project_endpoint(
     # Get the stored function_name (for new projects) or derive from github_url (backwards compat)
     function_name = project.get("function_name")
     
-    # Delete AWS resources using new deployer function
+    # Delete AWS resources (Lambda, ECR, and CloudWatch log group)
     result = delete_project_resources(project["github_url"], function_name=function_name)
-    
-    # Delete CloudWatch logs - use stored function_name if available
-    logs_function_name = function_name if function_name else extract_project_name(project["github_url"])
-    logs_deleted = delete_lambda_logs(logs_function_name)
     
     # Delete from DynamoDB (includes deployments)
     delete_project(project_id)
@@ -591,5 +586,5 @@ async def delete_project_endpoint(
         "deleted": True,
         "lambda_deleted": result["lambda_deleted"],
         "ecr_deleted": result["ecr_deleted"],
-        "logs_deleted": logs_deleted,
+        "logs_deleted": result["logs_deleted"],
     }
