@@ -186,19 +186,9 @@ FUNCTION_EXISTS=$(aws lambda get-function --function-name $LAMBDA_FUNCTION_NAME 
 
 if [ "$FUNCTION_EXISTS" == "no" ]; then
     echo "Creating new Lambda function..."
-    aws lambda create-function \
-        --function-name $LAMBDA_FUNCTION_NAME \
-        --package-type Image \
-        --code ImageUri=$IMAGE_URI \
-        --role $ROLE_ARN \
-        --timeout 900 \
-        --memory-size 2048 \
-        --environment "Variables={CLERK_SECRET_KEY=$CLERK_SECRET_KEY,CLERK_ISSUER=$CLERK_ISSUER,FRONTEND_URL=$FRONTEND_URL,AWS_LWA_INVOKE_MODE=buffered,DEPLOY_QUEUE_URL=$DEPLOY_QUEUE_URL,GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID,GITHUB_APP_SLUG=$GITHUB_APP_SLUG,GITHUB_APP_ID=$GITHUB_APP_ID,GITHUB_PRIVATE_KEY=$GITHUB_PRIVATE_KEY}" \
-        --region $AWS_REGION \
-        --query "FunctionArn" --output text
-    
-    echo "Waiting for function to be active..."
-    aws lambda wait function-active --function-name $LAMBDA_FUNCTION_NAME --region $AWS_REGION
+    echo "ERROR: Lambda function does not exist. Please create it first with environment variables configured."
+    echo "You can set environment variables in the AWS Console or use 'aws lambda create-function' manually."
+    exit 1
 else
     echo "Updating existing Lambda function..."
     aws lambda update-function-code \
@@ -206,20 +196,19 @@ else
         --image-uri $IMAGE_URI \
         --region $AWS_REGION \
         --query "FunctionArn" --output text
-    
+
     # Wait for update to complete
     echo "Waiting for function update..."
     aws lambda wait function-updated --function-name $LAMBDA_FUNCTION_NAME --region $AWS_REGION
-    
-    # Update configuration
+
+    # Update configuration (timeout and memory only, preserve existing environment variables)
     aws lambda update-function-configuration \
         --function-name $LAMBDA_FUNCTION_NAME \
         --timeout 900 \
         --memory-size 2048 \
-        --environment "Variables={CLERK_SECRET_KEY=$CLERK_SECRET_KEY,CLERK_ISSUER=$CLERK_ISSUER,FRONTEND_URL=$FRONTEND_URL,AWS_LWA_INVOKE_MODE=buffered,DEPLOY_QUEUE_URL=$DEPLOY_QUEUE_URL,GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID,GITHUB_APP_SLUG=$GITHUB_APP_SLUG,GITHUB_APP_ID=$GITHUB_APP_ID,GITHUB_PRIVATE_KEY=$GITHUB_PRIVATE_KEY}" \
         --region $AWS_REGION \
         --query "FunctionArn" --output text
-    
+
     # Wait for config update
     aws lambda wait function-updated --function-name $LAMBDA_FUNCTION_NAME --region $AWS_REGION
 fi

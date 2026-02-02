@@ -141,25 +141,33 @@ def deploy_project(
 def delete_project_resources(github_url: str, function_name: Optional[str] = None) -> dict:
     """
     Delete all AWS resources for a project.
-    
+
     Args:
         github_url: GitHub repository URL
         function_name: The stored Lambda function name (for new projects with unique naming)
-        
+
     Returns:
         Dict with deletion status
     """
     # Use stored function_name if provided, otherwise derive from github_url (backwards compat)
     if function_name:
         project_name = function_name
+        print(f"🗑️ Deleting project resources using stored function_name: {project_name}")
     else:
         project_name = extract_project_name(github_url)
-    
+        print(f"🗑️ Deleting project resources using derived name from URL: {project_name}")
+
+    print(f"🗑️ Deleting Lambda function...")
     lambda_deleted = delete_lambda(project_name)
+
+    print(f"🗑️ Deleting ECR repository...")
     ecr_deleted = delete_ecr_repository(get_ecr_repo_name(project_name))
-    # Delete CloudWatch log group for the Lambda function
+
+    print(f"🗑️ Deleting CloudWatch log group...")
     logs_deleted = delete_lambda_logs(project_name)
-    
+
+    print(f"🗑️ Deletion complete - Lambda: {lambda_deleted}, ECR: {ecr_deleted}, Logs: {logs_deleted}")
+
     return {
         "lambda_deleted": lambda_deleted,
         "ecr_deleted": ecr_deleted,

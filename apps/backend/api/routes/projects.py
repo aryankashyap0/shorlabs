@@ -569,13 +569,17 @@ async def delete_project_endpoint(
     """Delete a project and all associated AWS resources."""
 
     project = get_project_by_key(user_id, project_id)
-    
+
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    
+
     # Get the stored function_name (for new projects) or derive from github_url (backwards compat)
     function_name = project.get("function_name")
-    
+
+    print(f"🗑️ DELETE PROJECT: project_id={project_id}")
+    print(f"🗑️ DELETE PROJECT: function_name from DB = '{function_name}'")
+    print(f"🗑️ DELETE PROJECT: github_url = '{project.get('github_url')}'")
+
     # Delete AWS resources (Lambda, ECR, and CloudWatch log group)
     result = delete_project_resources(project["github_url"], function_name=function_name)
     

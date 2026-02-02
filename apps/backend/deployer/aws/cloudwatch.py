@@ -266,26 +266,48 @@ def _detect_log_level(message: str) -> str:
 def delete_lambda_logs(function_name: str) -> bool:
     """
     Delete CloudWatch log group for a Lambda function.
-    
+
     Args:
         function_name: The Lambda function name (without prefix)
-        
+
     Returns:
         True if deleted, False otherwise
     """
+    from botocore.exceptions import ClientError
+
     logs_client = get_logs_client()
-    
+
     # Get the full Lambda function name (with prefix)
     full_function_name = get_lambda_function_name(function_name)
     log_group = f"/aws/lambda/{full_function_name}"
-    
+
+    print(f"🗑️ Attempting to delete log group: {log_group}")
+
     try:
+        # First check if log group exists
+        response = logs_client.describe_log_groups(logGroupNamePrefix=log_group)
+        matching_groups = [g for g in response.get("logGroups", []) if g["logGroupName"] == log_group]
+
+        if not matching_groups:
+            print(f"⚠️ Log group does not exist: {log_group}")
+            return True  # Not an error if it doesn't exist
+
+        # Log group exists, delete it
         logs_client.delete_log_group(logGroupName=log_group)
         print(f"✅ Deleted CloudWatch log group: {log_group}")
         return True
-    except logs_client.exceptions.ResourceNotFoundException:
-        print(f"⚠️ Log group not found: {log_group}")
-        return True  # Not an error if it doesn't exist
+
+    except ClientError as e:
+        error_code = e.response.get("Error", {}).get("Code", "Unknown")
+        error_message = e.response.get("Error", {}).get("Message", str(e))
+
+        if error_code == "ResourceNotFoundException":
+            print(f"⚠️ Log group not found: {log_group}")
+            return True  # Not an error if it doesn't exist
+        else:
+            print(f"❌ Failed to delete log group {log_group}: [{error_code}] {error_message}")
+            return False
+
     except Exception as e:
-        print(f"❌ Failed to delete log group: {e}")
+        print(f"❌ Unexpected error deleting log group {log_group}: {type(e).__name__}: {e}")
         return False
