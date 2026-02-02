@@ -284,15 +284,7 @@ def delete_lambda_logs(function_name: str) -> bool:
     print(f"🗑️ Attempting to delete log group: {log_group}")
 
     try:
-        # First check if log group exists
-        response = logs_client.describe_log_groups(logGroupNamePrefix=log_group)
-        matching_groups = [g for g in response.get("logGroups", []) if g["logGroupName"] == log_group]
-
-        if not matching_groups:
-            print(f"⚠️ Log group does not exist: {log_group}")
-            return True  # Not an error if it doesn't exist
-
-        # Log group exists, delete it
+        # Just try to delete directly - boto3 will raise ResourceNotFoundException if it doesn't exist
         logs_client.delete_log_group(logGroupName=log_group)
         print(f"✅ Deleted CloudWatch log group: {log_group}")
         return True
@@ -302,7 +294,7 @@ def delete_lambda_logs(function_name: str) -> bool:
         error_message = e.response.get("Error", {}).get("Message", str(e))
 
         if error_code == "ResourceNotFoundException":
-            print(f"⚠️ Log group not found: {log_group}")
+            print(f"⚠️ Log group not found (already deleted or never existed): {log_group}")
             return True  # Not an error if it doesn't exist
         else:
             print(f"❌ Failed to delete log group {log_group}: [{error_code}] {error_message}")

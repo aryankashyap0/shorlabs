@@ -163,7 +163,8 @@ def delete_project_resources(github_url: str, function_name: Optional[str] = Non
     print(f"🗑️ Deleting ECR repository...")
     ecr_deleted = delete_ecr_repository(get_ecr_repo_name(project_name))
 
-    print(f"🗑️ Deleting CloudWatch log group...")
+    print(f"🗑️ Deleting CloudWatch log group for project_name='{project_name}'...")
+    print(f"🗑️ Expected log group: /aws/lambda/shorlabs-{project_name}")
     logs_deleted = delete_lambda_logs(project_name)
 
     print(f"🗑️ Deletion complete - Lambda: {lambda_deleted}, ECR: {ecr_deleted}, Logs: {logs_deleted}")

@@ -430,10 +430,15 @@ async def get_runtime_logs(
     
     # Use stored function_name if available (new deployments), otherwise derive from github_url (old deployments)
     project_name = project.get("function_name")
+    print(f"🔍 RUNTIME LOGS: project_id={project_id}")
+    print(f"🔍 RUNTIME LOGS: function_name from DB = '{project_name}'")
+    print(f"🔍 RUNTIME LOGS: github_url = '{project.get('github_url')}'")
     if not project_name:
         project_name = extract_project_name(project["github_url"])
+        print(f"🔍 RUNTIME LOGS: derived project_name = '{project_name}'")
     logs = get_lambda_logs(project_name)
-    
+    print(f"🔍 RUNTIME LOGS: got {len(logs)} log entries")
+
     return {
         "logs": logs,
         "function_name": project_name,
