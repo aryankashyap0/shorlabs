@@ -250,17 +250,7 @@ export default function ProjectsPage() {
                                 </>
                             )}
 
-                            {/* Commercial Use Notice - Small text for non-Pro users */}
-                            {!isPro && (
-                                <button
-                                    onClick={openUpgradeModal}
-                                    className="w-full px-5 py-3 border-t border-zinc-100 text-left hover:bg-zinc-50 transition-colors cursor-pointer"
-                                >
-                                    <p className="text-xs text-zinc-500">
-                                        Commercial use requires Pro. <span className="text-blue-600 hover:underline">Upgrade to increase limits →</span>
-                                    </p>
-                                </button>
-                            )}
+
                         </div>
                     </div>
 
