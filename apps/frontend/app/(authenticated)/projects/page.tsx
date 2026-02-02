@@ -250,6 +250,17 @@ export default function ProjectsPage() {
                                 </>
                             )}
 
+                            {!isPro && (
+                                <button
+                                    onClick={openUpgradeModal}
+                                    className="w-full px-5 py-3 border-t border-zinc-100 text-left hover:bg-zinc-50 transition-colors cursor-pointer"
+                                >
+                                    <p className="text-xs text-blue-600 hover:underline">
+                                        Upgrade to increase limits →
+                                    </p>
+                                </button>
+                            )}
+
 
                         </div>
                     </div>
