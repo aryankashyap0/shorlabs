@@ -84,17 +84,7 @@ FRAMEWORKS = [
         },
         "start_command": "uvicorn {module}:app --host 0.0.0.0 --port 8080",
     },
-    # Generic Python (fallback for Python projects without framework detection)
-    {
-        "name": "Python",
-        "runtime": "python",
-        "detectors": {
-            "files": ["main.py", "app.py", "server.py", "run.py"],
-            "match_content": None,  # Just check file exists
-        },
-        "start_command": "python {file}",
-    },
-    # Node.js Frameworks
+    # Node.js Frameworks - CHECK BEFORE PYTHON GENERIC FALLBACK
     {
         "name": "Next.js",
         "runtime": "nodejs",
@@ -149,7 +139,7 @@ FRAMEWORKS = [
         },
         "start_command": "npm run start",
     },
-    # Generic Node.js (fallback)
+    # Generic Node.js (fallback for any package.json project)
     {
         "name": "Node.js",
         "runtime": "nodejs",
@@ -158,6 +148,16 @@ FRAMEWORKS = [
             "match_package": None,  # Just check package.json exists
         },
         "start_command": "npm run start",
+    },
+    # Generic Python (fallback - LAST so Node.js gets checked first)
+    {
+        "name": "Python",
+        "runtime": "python",
+        "detectors": {
+            "files": ["main.py", "app.py", "server.py", "run.py"],
+            "match_content": None,  # Just check file exists
+        },
+        "start_command": "python {file}",
     },
 ]
 

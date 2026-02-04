@@ -28,7 +28,7 @@ const HeroSection = () => {
                         Deploy backends
                         <br className="hidden sm:block" />
                         <span className="sm:hidden"> </span>
-                        <span className="text-gray-400">without the hassle.</span>
+                        <span className="text-gray-900">without the hassle.</span>
                     </h1>
 
                     {/* Subtitle */}
