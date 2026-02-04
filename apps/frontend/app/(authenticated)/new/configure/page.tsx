@@ -240,6 +240,11 @@ function ConfigureProjectContent() {
                     setStartCommand(data.suggested_command)
                     setDetectedFramework(data.framework)
                     setDetectionConfidence(data.confidence)
+                } else if (data.detected && data.runtime === "nodejs") {
+                    // Node.js detected but no specific command
+                    setStartCommand("npm run start")
+                    setDetectedFramework(data.framework || "Node.js")
+                    setDetectionConfidence("medium")
                 } else {
                     // No detection - set a sensible default
                     setStartCommand("uvicorn main:app --host 0.0.0.0 --port 8080")

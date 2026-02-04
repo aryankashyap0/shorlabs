@@ -94,7 +94,16 @@ FRAMEWORKS = [
         },
         "start_command": "python {file}",
     },
-    # Node.js Frameworks (these use package.json start script)
+    # Node.js Frameworks
+    {
+        "name": "Next.js",
+        "runtime": "nodejs",
+        "detectors": {
+            "files": ["package.json"],
+            "match_package": ["next"],
+        },
+        "start_command": "npm run build && npm run start",
+    },
     {
         "name": "Express",
         "runtime": "nodejs",
@@ -102,7 +111,7 @@ FRAMEWORKS = [
             "files": ["package.json"],
             "match_package": ["express"],
         },
-        "start_command": None,  # Uses package.json start script
+        "start_command": "npm run start",
     },
     {
         "name": "Fastify",
@@ -111,7 +120,7 @@ FRAMEWORKS = [
             "files": ["package.json"],
             "match_package": ["fastify"],
         },
-        "start_command": None,
+        "start_command": "npm run start",
     },
     {
         "name": "Hono",
@@ -120,7 +129,7 @@ FRAMEWORKS = [
             "files": ["package.json"],
             "match_package": ["hono"],
         },
-        "start_command": None,
+        "start_command": "npm run start",
     },
     {
         "name": "Koa",
@@ -129,7 +138,7 @@ FRAMEWORKS = [
             "files": ["package.json"],
             "match_package": ["koa"],
         },
-        "start_command": None,
+        "start_command": "npm run start",
     },
     {
         "name": "NestJS",
@@ -138,7 +147,7 @@ FRAMEWORKS = [
             "files": ["package.json"],
             "match_package": ["@nestjs/core"],
         },
-        "start_command": None,
+        "start_command": "npm run start",
     },
     # Generic Node.js (fallback)
     {
@@ -148,7 +157,7 @@ FRAMEWORKS = [
             "files": ["package.json"],
             "match_package": None,  # Just check package.json exists
         },
-        "start_command": None,  # Uses package.json start script
+        "start_command": "npm run start",
     },
 ]
 
