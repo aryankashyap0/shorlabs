@@ -12,6 +12,7 @@ from pydantic import BaseModel
 
 from api.auth import get_current_user_id
 from api.db.dynamodb import save_github_token, get_github_token, get_github_installation
+from deployer.utils.frameworks import detect_framework
 
 router = APIRouter(prefix="/api/github", tags=["github"])
 
@@ -379,3 +380,27 @@ async def get_repo_contents(
         }
         for item in contents
     ]
+
+
+@router.get("/repos/{repo:path}/detect-framework")
+async def detect_framework_endpoint(
+    repo: str,
+    root_directory: str = "./",
+    user_id: str = Depends(get_current_user_id),
+):
+    """
+    Detect framework and suggest start command for a repository.
+    """
+    token = await get_or_refresh_token(user_id)
+    
+    if not token:
+        raise HTTPException(
+            status_code=400,
+            detail="GitHub account not connected.",
+        )
+    
+    github_url = f"https://github.com/{repo}"
+    
+    result = await detect_framework(github_url, root_directory, token)
+    
+    return result

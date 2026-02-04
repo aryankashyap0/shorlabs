@@ -106,6 +106,12 @@ interface StartCommandInputProps {
     isSaving?: boolean
     /** Whether in edit mode (shows save/cancel buttons) */
     isEditMode?: boolean
+    /** Detected framework name (for auto-detection status) */
+    detectedFramework?: string | null
+    /** Whether detection is in progress */
+    isDetecting?: boolean
+    /** Detection confidence level */
+    detectionConfidence?: "high" | "medium" | "low"
 }
 
 export function StartCommandInput({
@@ -117,6 +123,9 @@ export function StartCommandInput({
     onCancel,
     isSaving = false,
     isEditMode = false,
+    detectedFramework,
+    isDetecting = false,
+    detectionConfidence = "low",
 }: StartCommandInputProps) {
     // Find the matching template based on current value
     const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(() => {
@@ -142,6 +151,22 @@ export function StartCommandInput({
                 <div className="flex items-center gap-3">
                     <Terminal className="h-5 w-5 text-zinc-400" />
                     <h3 className="font-semibold text-zinc-900">Start Command</h3>
+
+                    {/* Detection Status Badge */}
+                    {isDetecting ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-zinc-500 bg-zinc-100 rounded-full">
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            Detecting...
+                        </span>
+                    ) : detectedFramework && (
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${detectionConfidence === "high"
+                            ? "text-emerald-700 bg-emerald-50"
+                            : "text-amber-700 bg-amber-50"
+                            }`}>
+                            <span className="text-[10px]">✨</span>
+                            Auto-detected: {detectedFramework}
+                        </span>
+                    )}
                 </div>
                 {onStartEdit && !isEditMode && (
                     <Button
@@ -159,54 +184,35 @@ export function StartCommandInput({
                 {/* Terminal-style Command Input - FIRST */}
                 <div className="flex items-center gap-3 bg-zinc-900 rounded-xl px-4 py-3">
                     <span className="text-emerald-400 font-mono text-sm select-none shrink-0">$</span>
-                    <input
-                        type="text"
-                        value={value}
-                        onChange={(e) => {
-                            onChange(e.target.value)
-                            // Clear template selection when user types custom command
-                            const match = FRAMEWORK_TEMPLATES.find(t => t.command === e.target.value)
-                            setSelectedTemplateId(match?.id || null)
-                        }}
-                        placeholder="Enter your start command..."
-                        disabled={disabled}
-                        className="flex-1 bg-transparent font-mono text-sm text-zinc-100 placeholder:text-zinc-500 outline-none border-none caret-emerald-400 selection:bg-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{ caretColor: '#34d399' }}
-                    />
-                </div>
-
-                {/* Framework Templates - Horizontal chips */}
-                <div>
-                    <p className="text-xs font-medium text-zinc-500 mb-2">Quick templates</p>
-                    <div className="flex flex-wrap gap-2">
-                        {FRAMEWORK_TEMPLATES.map((template) => {
-                            const isSelected = selectedTemplateId === template.id
-                            return (
-                                <button
-                                    key={template.id}
-                                    onClick={() => handleTemplateSelect(template)}
-                                    disabled={disabled}
-                                    className={`
-                                        inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
-                                        transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed
-                                        ${isSelected
-                                            ? "bg-zinc-50 text-zinc-900 border-2 border-zinc-900"
-                                            : "bg-zinc-100 text-zinc-600 border-2 border-transparent hover:bg-zinc-200"
-                                        }
-                                    `}
-                                >
-                                    <template.icon />
-                                    <span>{template.name}</span>
-                                </button>
-                            )
-                        })}
-                    </div>
+                    {isDetecting ? (
+                        <div className="flex-1 flex items-center gap-2">
+                            <div className="h-4 w-48 bg-zinc-700 rounded animate-pulse" />
+                            <span className="text-zinc-500 text-sm font-mono">Detecting...</span>
+                        </div>
+                    ) : (
+                        <input
+                            type="text"
+                            value={value}
+                            onChange={(e) => {
+                                onChange(e.target.value)
+                                // Clear template selection when user types custom command
+                                const match = FRAMEWORK_TEMPLATES.find(t => t.command === e.target.value)
+                                setSelectedTemplateId(match?.id || null)
+                            }}
+                            placeholder="Enter your start command..."
+                            disabled={disabled}
+                            className="flex-1 bg-transparent font-mono text-sm text-zinc-100 placeholder:text-zinc-500 outline-none border-none caret-emerald-400 selection:bg-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ caretColor: '#34d399' }}
+                        />
+                    )}
                 </div>
 
                 {/* Subtle tip - not a warning box */}
-                <p className="text-xs text-zinc-500">
-                    <span className="text-zinc-400">💡</span> Your application must listen on <code className="bg-zinc-100 px-1 py-0.5 rounded text-zinc-600 font-mono text-[11px]">port 8080</code>
-                </p>
+                {!isDetecting && (
+                    <p className="text-xs text-zinc-500">
+                        <span className="text-zinc-400">💡</span> Your application must listen on <code className="bg-zinc-100 px-1 py-0.5 rounded text-zinc-600 font-mono text-[11px]">port 8080</code>
+                    </p>
+                )}
 
                 {/* Edit Mode Actions */}
                 {isEditMode && onSave && onCancel && (

@@ -85,6 +85,11 @@ function ConfigureProjectContent() {
     const [error, setError] = useState<string | null>(null)
     const [activeSection, setActiveSection] = useState<"general" | "compute" | "environment">("general")
 
+    // Framework detection state
+    const [detectedFramework, setDetectedFramework] = useState<string | null>(null)
+    const [detectingFramework, setDetectingFramework] = useState(true)
+    const [detectionConfidence, setDetectionConfidence] = useState<"high" | "medium" | "low">("low")
+
     // Compute settings
     const [memory, setMemory] = useState(1024)
     const [timeout, setTimeout] = useState(30)
@@ -208,6 +213,55 @@ function ConfigureProjectContent() {
         setRootDirectory(selectedDir)
         setShowDirPicker(false)
     }
+
+    // Framework detection function
+    const detectFramework = useCallback(async (rootDir: string) => {
+        if (!repoFullName) return
+
+        setDetectingFramework(true)
+        setDetectedFramework(null)
+
+        try {
+            const token = await getToken()
+            if (!token) return
+
+            const url = `${API_BASE_URL}/api/github/repos/${repoFullName}/detect-framework?root_directory=${encodeURIComponent(rootDir)}`
+
+            const response = await fetch(
+                url,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            )
+
+            if (response.ok) {
+                const data = await response.json()
+                if (data.detected && data.suggested_command) {
+                    setStartCommand(data.suggested_command)
+                    setDetectedFramework(data.framework)
+                    setDetectionConfidence(data.confidence)
+                } else {
+                    // No detection - set a sensible default
+                    setStartCommand("uvicorn main:app --host 0.0.0.0 --port 8080")
+                    setDetectedFramework(null)
+                    setDetectionConfidence("low")
+                }
+            }
+        } catch (err) {
+            console.error("Framework detection failed:", err)
+            // Fallback to default
+            setStartCommand("uvicorn main:app --host 0.0.0.0 --port 8080")
+        } finally {
+            setDetectingFramework(false)
+        }
+    }, [repoFullName, getToken])
+
+    // Detect framework on mount and when root directory changes
+    useEffect(() => {
+        if (repoFullName) {
+            detectFramework(rootDirectory)
+        }
+    }, [repoFullName, rootDirectory, detectFramework])
 
     const handleDeploy = async () => {
         if (!projectName.trim() || !repoFullName) return
@@ -519,6 +573,9 @@ function ConfigureProjectContent() {
                         <StartCommandInput
                             value={startCommand}
                             onChange={setStartCommand}
+                            detectedFramework={detectedFramework}
+                            isDetecting={detectingFramework}
+                            detectionConfidence={detectionConfidence}
                         />
                     </div>
                 )}
