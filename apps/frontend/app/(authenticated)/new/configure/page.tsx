@@ -43,9 +43,9 @@ import { trackEvent } from "@/lib/amplitude"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
-// Tier project limits
-const FREE_PROJECT_LIMIT = 1
-const PRO_PROJECT_LIMIT = 10
+// No project count limits - usage (requests/compute) is the real gate
+const FREE_PROJECT_LIMIT = Infinity
+const PRO_PROJECT_LIMIT = Infinity
 
 interface DirectoryItem {
     name: string

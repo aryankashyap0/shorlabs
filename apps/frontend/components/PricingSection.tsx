@@ -17,7 +17,7 @@ const plans = [
         period: "",
         subtext: "Always free",
         features: [
-            "1 Project",
+            "Unlimited Projects",
             "1 GB Memory",
             "Up to 30 Second Timeout",
             "512 MB Storage",
@@ -32,7 +32,7 @@ const plans = [
         period: "/month",
         subtext: "Only billed monthly",
         features: [
-            "10 Projects",
+            "Unlimited Projects",
             "Up to 4 GB Memory",
             "Up to 300 Second Timeout",
             "2 GB Storage",
