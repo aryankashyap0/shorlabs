@@ -243,6 +243,10 @@ async def create_new_project(
     # Normalize root_directory
     root_directory = request.root_directory or "./"
     
+    # Validate organization_id is not empty (organization-only mode)
+    if not request.organization_id or not request.organization_id.strip():
+        raise HTTPException(status_code=400, detail="organization_id is required")
+    
     # Get compute settings with defaults
     memory = request.memory or 1024
     timeout = request.timeout or 30
@@ -290,9 +294,9 @@ async def create_new_project(
 @router.get("")
 async def get_projects(
     user_id: str = Depends(get_current_user_id),
-    org_id: Optional[str] = Query(None),
+    org_id: str = Query(...),
 ):
-    """List all projects for current user or organization."""
+    """List all projects for current user's organization."""
     projects = list_projects(user_id, org_id)
     return [
         {
@@ -358,7 +362,7 @@ async def get_user_usage_endpoint(user_id: str = Depends(get_current_user_id)):
 async def get_project_details(
     project_id: str,
     user_id: str = Depends(get_current_user_id),
-    org_id: Optional[str] = Query(None),
+    org_id: str = Query(...),
 ):
     """Get project details with deployment history."""
 
@@ -407,7 +411,7 @@ async def get_project_details(
 async def get_project_status(
     project_id: str,
     user_id: str = Depends(get_current_user_id),
-    org_id: Optional[str] = Query(None),
+    org_id: str = Query(...),
 ):
     """Get current project status (for polling)."""
     project = get_project(project_id)
@@ -433,7 +437,7 @@ async def get_project_status(
 async def get_runtime_logs(
     project_id: str,
     user_id: str = Depends(get_current_user_id),
-    org_id: Optional[str] = Query(None),
+    org_id: str = Query(...),
 ):
     """Fetch runtime logs for a project's Lambda function."""
     project = get_project(project_id)
@@ -474,7 +478,7 @@ async def update_project_env_vars(
     project_id: str,
     request: UpdateEnvVarsRequest,
     user_id: str = Depends(get_current_user_id),
-    org_id: Optional[str] = Query(None),
+    org_id: str = Query(...),
 ):
     """Update project environment variables."""
     project = get_project_by_key(user_id, project_id, org_id)
@@ -505,7 +509,7 @@ async def update_project_fields(
     project_id: str,
     request: UpdateProjectRequest,
     user_id: str = Depends(get_current_user_id),
-    org_id: Optional[str] = Query(None),
+    org_id: str = Query(...),
 ):
     """Update project fields like start_command, root_directory, name."""
 
@@ -545,7 +549,7 @@ async def update_project_fields(
 async def redeploy_project(
     project_id: str,
     user_id: str = Depends(get_current_user_id),
-    org_id: Optional[str] = Query(None),
+    org_id: str = Query(...),
 ):
     """Trigger a redeployment of the project."""
     from api.routes.github import get_or_refresh_token
@@ -593,7 +597,7 @@ async def redeploy_project(
 async def delete_project_endpoint(
     project_id: str,
     user_id: str = Depends(get_current_user_id),
-    org_id: Optional[str] = Query(None),
+    org_id: str = Query(...),
 ):
     """Delete a project and all associated AWS resources."""
 

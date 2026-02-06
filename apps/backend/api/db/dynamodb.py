@@ -215,11 +215,9 @@ def create_project(
     # Build custom URL
     custom_url = f"https://{subdomain}.{SHORLABS_DOMAIN}"
 
-    # Determine PK based on organization_id
-    pk = f"ORG#{organization_id}" if organization_id else f"USER#{user_id}"
-
+    # Always use USER# for PK - organization_id is stored as attribute for filtering
     item = {
-        "PK": pk,
+        "PK": f"USER#{user_id}",
         "SK": f"PROJECT#{project_id}",
         "project_id": project_id,
         "user_id": user_id,
@@ -272,20 +270,18 @@ def get_project(project_id: str) -> Optional[dict]:
     return project_items[0] if project_items else None
 
 
-def get_project_by_key(user_id: str, project_id: str, org_id: Optional[str] = None) -> Optional[dict]:
+def get_project_by_key(user_id: str, project_id: str, org_id: str) -> Optional[dict]:
     """
-    Get a project by User ID (or Org ID) and Project ID using direct GetItem.
+    Get a project by User ID and Project ID using direct GetItem.
     
-    This provides strong consistency, suitable for read-after-write scenarios
-    like redeploying immediately after updates.
+    Projects are stored with PK=USER#{user_id}. org_id is required for authorization.
     """
     table = get_or_create_table()
     
-    pk = f"ORG#{org_id}" if org_id else f"USER#{user_id}"
-    
+    # Projects are stored with PK=USER#{user_id}
     response = table.get_item(
         Key={
-            "PK": pk,
+            "PK": f"USER#{user_id}",
             "SK": f"PROJECT#{project_id}",
         },
         ConsistentRead=True,
@@ -293,17 +289,24 @@ def get_project_by_key(user_id: str, project_id: str, org_id: Optional[str] = No
     return response.get("Item")
 
 
-def list_projects(user_id: str, org_id: Optional[str] = None) -> list:
-    """List all projects for a user or organization."""
+def list_projects(user_id: str, org_id: str) -> list:
+    """List all projects for a user filtered by organization.
+    
+    Projects are stored with PK=USER#{user_id} and organization_id as an attribute.
+    """
     table = get_or_create_table()
     
-    pk = f"ORG#{org_id}" if org_id else f"USER#{user_id}"
-    
+    # Query by user partition key (how data is stored)
     response = table.query(
-        KeyConditionExpression=Key("PK").eq(pk)
+        KeyConditionExpression=Key("PK").eq(f"USER#{user_id}")
         & Key("SK").begins_with("PROJECT#"),
     )
-    return response.get("Items", [])
+    projects = response.get("Items", [])
+    
+    # Filter to only projects belonging to the organization
+    projects = [p for p in projects if p.get("organization_id") == org_id]
+    
+    return projects
 
 
 def update_project(project_id: str, updates: dict) -> Optional[dict]:
