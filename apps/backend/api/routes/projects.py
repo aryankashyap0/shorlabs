@@ -317,7 +317,10 @@ async def get_projects(
 
 
 @router.get("/usage")
-async def get_user_usage_endpoint(user_id: str = Depends(get_current_user_id)):
+async def get_user_usage_endpoint(
+    user_id: str = Depends(get_current_user_id),
+    org_id: str = Query(...),
+):
     """
     Get current user's usage metrics for the current billing period.
     
@@ -330,8 +333,8 @@ async def get_user_usage_endpoint(user_id: str = Depends(get_current_user_id)):
     # Get current billing period
     period = get_current_period()
     
-    # Fetch usage from DynamoDB
-    usage_data = get_user_usage(user_id, period)
+    # Fetch usage from DynamoDB (filtered by org_id)
+    usage_data = get_user_usage(user_id, period, org_id)
     
     # Extract metrics, default to 0 if no data yet
     current_requests = int(usage_data.get("requests", 0)) if usage_data else 0

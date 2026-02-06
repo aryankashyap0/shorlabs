@@ -449,13 +449,14 @@ def get_current_period() -> str:
     return datetime.utcnow().strftime("%Y-%m")
 
 
-def get_user_usage(user_id: str, period: str = None) -> Optional[dict]:
+def get_user_usage(user_id: str, period: str = None, org_id: str = None) -> Optional[dict]:
     """
-    Get usage metrics for a user in a specific period.
+    Get usage metrics for a user in a specific period, filtered by organization.
     
     Args:
         user_id: User ID
         period: Billing period (YYYY-MM). Defaults to current period.
+        org_id: Organization ID to filter by (required in org-only mode)
         
     Returns:
         Usage dict with requests and gb_seconds, or None if not found
@@ -472,7 +473,14 @@ def get_user_usage(user_id: str, period: str = None) -> Optional[dict]:
                 "period": period,
             }
         )
-        return response.get("Item")
+        item = response.get("Item")
+        
+        # If org_id provided, verify it matches
+        if item and org_id:
+            if item.get("organization_id") != org_id:
+                return None  # Usage belongs to different org
+        
+        return item
     except Exception as e:
         print(f"Error getting usage for user {user_id}: {e}")
         return None

@@ -52,11 +52,16 @@ const fetcher = async (url: string, token: string): Promise<Usage> => {
 }
 
 export function useUsage(isPro: boolean = false): UseUsageReturn {
-    const { getToken, isLoaded } = useAuth()
+    const { getToken, isLoaded, orgId } = useAuth()
 
-    // Only fetch when auth is loaded - setting key to null prevents SWR from fetching
+    // Build URL with org_id parameter
+    const usageUrl = orgId
+        ? `${API_BASE_URL}/api/projects/usage?org_id=${orgId}`
+        : null  // Don't fetch if no org selected
+
+    // Only fetch when auth is loaded and org is selected
     const { data, error, mutate, isLoading, isValidating } = useSWR<Usage>(
-        isLoaded ? [`${API_BASE_URL}/api/projects/usage`, getToken] : null,
+        isLoaded && orgId ? [usageUrl, getToken] : null,
         async ([url, tokenGetter]) => {
             const token = await (tokenGetter as () => Promise<string | null>)()
             if (!token) {
@@ -89,10 +94,10 @@ export function useUsage(isPro: boolean = false): UseUsageReturn {
 
     return {
         usage: adjustedUsage,
-        // Show loading if auth isn't loaded yet OR if SWR is loading
-        loading: !isLoaded || isLoading,
-        // Don't show error if auth isn't loaded yet
-        error: isLoaded ? error : undefined,
+        // Show loading if auth isn't loaded yet OR no org selected OR if SWR is loading
+        loading: !isLoaded || !orgId || isLoading,
+        // Don't show error if auth isn't loaded yet or no org
+        error: isLoaded && orgId ? error : undefined,
         refresh: () => mutate(),
         isValidating,
     }
