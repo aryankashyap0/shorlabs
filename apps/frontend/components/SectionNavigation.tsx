@@ -80,11 +80,12 @@ export default function SectionNavigation() {
                         >
                             Sign In
                         </Link>
-                        <Link href="/create-account">
-                            <Button className="text-sm bg-gray-900 text-white hover:bg-gray-800 px-4 py-2 rounded-lg">
-                                Create Account
-                            </Button>
-                        </Link>
+                        <BookDemoButton
+                            className="text-sm px-4 py-2 rounded-lg"
+                            size="sm"
+                        >
+                            Schedule a Call
+                        </BookDemoButton>
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -134,11 +135,9 @@ export default function SectionNavigation() {
                         >
                             Sign In
                         </Link>
-                        <Link href="/create-account" onClick={() => setOpen(false)}>
-                            <Button className="w-full text-sm bg-gray-900 text-white hover:bg-gray-800 py-2.5 rounded-lg">
-                                Create Account
-                            </Button>
-                        </Link>
+                        <BookDemoButton className="w-full text-sm py-2.5 rounded-lg">
+                            Schedule a Call
+                        </BookDemoButton>
                     </div>
                 </nav>
             </div>

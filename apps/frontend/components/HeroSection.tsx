@@ -46,7 +46,12 @@ const HeroSection = () => {
                                 </Button>
                             </Link>
                         ) : (
-                            <GoogleSignInButton source="hero_section" className="w-full sm:w-auto" />
+                            <Link href="/create-account" className="w-full sm:w-auto">
+                                <Button className="group w-full sm:w-auto text-sm bg-gray-900 text-white hover:bg-gray-800 px-6 h-10 rounded-full shadow-sm transition-all duration-200">
+                                    <span>Create Account</span>
+                                    <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-200 group-hover:translate-x-0.5" strokeWidth={1.5} />
+                                </Button>
+                            </Link>
                         )}
 
                         <GitHubButton className="w-full sm:w-auto" />
