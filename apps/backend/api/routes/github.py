@@ -1,5 +1,5 @@
 """
-GitHub API routes - fetch user's repositories and handle GitHub App installation.
+GitHub API routes - fetch organization's repositories and handle GitHub App installation.
 """
 import os
 import time
@@ -7,7 +7,7 @@ import httpx
 import jwt
 from typing import Optional
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from pydantic import BaseModel
 
 from api.auth import get_current_user_id
@@ -86,12 +86,13 @@ async def generate_installation_token(installation_id: str) -> dict:
         }
 
 
-async def get_or_refresh_token(user_id: str) -> Optional[str]:
+async def get_or_refresh_token(org_id: str, user_id: str) -> Optional[str]:
     """
-    Get GitHub token for user, refreshing if expired.
+    Get GitHub token for organization, refreshing if expired.
 
     Args:
-        user_id: Clerk user ID
+        org_id: Clerk organization ID
+        user_id: Clerk user ID (for saving refreshed token)
 
     Returns:
         Valid GitHub installation token, or None if not connected
@@ -99,9 +100,9 @@ async def get_or_refresh_token(user_id: str) -> Optional[str]:
     Raises:
         HTTPException: If token refresh fails due to installation removal
     """
-    installation = get_github_installation(user_id)
+    installation = get_github_installation(org_id)
     if not installation:
-        print(f"[GitHub] No installation found for user {user_id}")
+        print(f"[GitHub] No installation found for org {org_id}")
         return None
 
     # Check if token is expired
@@ -117,6 +118,7 @@ async def get_or_refresh_token(user_id: str) -> Optional[str]:
                         # Refresh token
                         token_data = await generate_installation_token(installation_id)
                         save_github_token(
+                            org_id,
                             user_id,
                             token_data["token"],
                             metadata=installation.get("metadata"),
@@ -169,7 +171,8 @@ async def get_auth_url():
 @router.post("/connect")
 async def connect_github(
     payload: ConnectRequest,
-    user_id: str = Depends(get_current_user_id)
+    user_id: str = Depends(get_current_user_id),
+    org_id: str = Query(..., description="Organization ID"),
 ):
     """Handle GitHub App installation callback and generate access token."""
     if not GITHUB_APP_ID or not GITHUB_PRIVATE_KEY:
@@ -230,8 +233,9 @@ async def connect_github(
             total_count = repos_data.get("total_count", 0)
             print(f"[GitHub] Successfully validated access to {total_count} repositories")
 
-        # Step 4: Save installation data to DynamoDB with correct account info
+        # Step 4: Save installation data to DynamoDB with org-based key
         save_github_token(
+            org_id,
             user_id,
             token_data["token"],
             metadata={
@@ -259,10 +263,13 @@ async def connect_github(
 
 
 @router.get("/repos")
-async def list_github_repos(user_id: str = Depends(get_current_user_id)):
+async def list_github_repos(
+    user_id: str = Depends(get_current_user_id),
+    org_id: str = Query(..., description="Organization ID"),
+):
     """List GitHub repositories accessible via GitHub App installation."""
     # Get or refresh token
-    token = await get_or_refresh_token(user_id)
+    token = await get_or_refresh_token(org_id, user_id)
 
     if not token:
         raise HTTPException(
@@ -314,9 +321,12 @@ async def list_github_repos(user_id: str = Depends(get_current_user_id)):
 
 
 @router.get("/status")
-async def github_connection_status(user_id: str = Depends(get_current_user_id)):
-    """Check if user has connected their GitHub App."""
-    installation = get_github_installation(user_id)
+async def github_connection_status(
+    user_id: str = Depends(get_current_user_id),
+    org_id: str = Query(..., description="Organization ID"),
+):
+    """Check if organization has connected their GitHub App."""
+    installation = get_github_installation(org_id)
 
     if not installation:
         return {"connected": False}
@@ -332,10 +342,11 @@ async def get_repo_contents(
     repo: str,
     path: str = "",
     user_id: str = Depends(get_current_user_id),
+    org_id: str = Query(..., description="Organization ID"),
 ):
     """Get contents of a repository directory for the directory picker."""
     # Get or refresh token
-    token = await get_or_refresh_token(user_id)
+    token = await get_or_refresh_token(org_id, user_id)
 
     if not token:
         raise HTTPException(
@@ -387,11 +398,12 @@ async def detect_framework_endpoint(
     repo: str,
     root_directory: str = "./",
     user_id: str = Depends(get_current_user_id),
+    org_id: str = Query(..., description="Organization ID"),
 ):
     """
     Detect framework and suggest start command for a repository.
     """
-    token = await get_or_refresh_token(user_id)
+    token = await get_or_refresh_token(org_id, user_id)
     
     if not token:
         raise HTTPException(

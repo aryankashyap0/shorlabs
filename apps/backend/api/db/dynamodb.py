@@ -203,7 +203,12 @@ def create_project(
     timeout: int = 30,
     ephemeral_storage: int = 512,
 ) -> dict:
-    """Create a new project with automatic subdomain generation."""
+    """
+    Create a new project owned by an organization.
+    
+    Projects use PK=ORG#{org_id} following Vercel's model where
+    organizations own projects, not individual users.
+    """
     table = get_or_create_table()
     project_id = generate_project_id()
     now = datetime.utcnow().isoformat()
@@ -215,13 +220,13 @@ def create_project(
     # Build custom URL
     custom_url = f"https://{subdomain}.{SHORLABS_DOMAIN}"
 
-    # Always use USER# for PK - organization_id is stored as attribute for filtering
+    # Use ORG# for PK - organizations own projects (Vercel-like model)
     item = {
-        "PK": f"USER#{user_id}",
+        "PK": f"ORG#{organization_id}",
         "SK": f"PROJECT#{project_id}",
         "project_id": project_id,
-        "user_id": user_id,
         "organization_id": organization_id,
+        "created_by": user_id,  # Track who created it (for audit)
         "name": name,
         "github_url": github_url,
         "github_repo": github_repo,
@@ -244,44 +249,29 @@ def create_project(
 
 
 def get_project(project_id: str) -> Optional[dict]:
-    """Get a project by ID using GSI."""
+    """Get a project by ID using GSI (for update/delete operations)."""
     table = get_or_create_table()
     response = table.query(
         IndexName="project-id-index",
         KeyConditionExpression=Key("project_id").eq(project_id),
     )
     items = response.get("Items", [])
-    # Filter for project items (though GSI should only have them if designed right, 
-    # but here project_id is shared? No, project_id is unique per project. 
-    # Deployments have project_id too? Let's check GSI definition.)
-    
-    # The GSI is on project_id.
-    # Deployment items: PK=PROJECT#id, SK=DEPLOY#...
-    # Project items: PK=USER#id, SK=PROJECT#id
-    
-    # The GSI KeySchema is just project_id. 
-    # Both Project and Deployment items have 'project_id' attribute.
-    # So querying GSI by project_id will return both Project and Deployments.
-    # We need to filter for the one that looks like a project (has status, name, etc, or SK starts with PROJECT#)
-    # But wait, GSI doesn't project PK/SK by default? PROJECTION TYPE ALL. So it does.
-    
-    # Let's filter in python for safety.
+    # Filter for project items (SK starts with PROJECT#)
     project_items = [i for i in items if i.get("SK", "").startswith("PROJECT#")]
     return project_items[0] if project_items else None
 
 
-def get_project_by_key(user_id: str, project_id: str, org_id: str) -> Optional[dict]:
+def get_project_by_key(org_id: str, project_id: str) -> Optional[dict]:
     """
-    Get a project by User ID and Project ID using direct GetItem.
+    Get a project by Organization ID and Project ID using direct GetItem.
     
-    Projects are stored with PK=USER#{user_id}. org_id is required for authorization.
+    Projects are stored with PK=ORG#{org_id} (org-owned model).
     """
     table = get_or_create_table()
     
-    # Projects are stored with PK=USER#{user_id}
     response = table.get_item(
         Key={
-            "PK": f"USER#{user_id}",
+            "PK": f"ORG#{org_id}",
             "SK": f"PROJECT#{project_id}",
         },
         ConsistentRead=True,
@@ -289,24 +279,20 @@ def get_project_by_key(user_id: str, project_id: str, org_id: str) -> Optional[d
     return response.get("Item")
 
 
-def list_projects(user_id: str, org_id: str) -> list:
-    """List all projects for a user filtered by organization.
+def list_projects(org_id: str) -> list:
+    """
+    List all projects for an organization.
     
-    Projects are stored with PK=USER#{user_id} and organization_id as an attribute.
+    Projects are stored with PK=ORG#{org_id} (org-owned model).
+    No filtering needed - just query by org partition key.
     """
     table = get_or_create_table()
     
-    # Query by user partition key (how data is stored)
     response = table.query(
-        KeyConditionExpression=Key("PK").eq(f"USER#{user_id}")
+        KeyConditionExpression=Key("PK").eq(f"ORG#{org_id}")
         & Key("SK").begins_with("PROJECT#"),
     )
-    projects = response.get("Items", [])
-    
-    # Filter to only projects belonging to the organization
-    projects = [p for p in projects if p.get("organization_id") == org_id]
-    
-    return projects
+    return response.get("Items", [])
 
 
 def update_project(project_id: str, updates: dict) -> Optional[dict]:
@@ -611,10 +597,10 @@ def increment_org_usage(
 
 
 # ─────────────────────────────────────────────────────────────
-# GITHUB CONNECTIONS TABLE
+# GITHUB CONNECTIONS TABLE (Organization-based)
 # ─────────────────────────────────────────────────────────────
 
-GITHUB_CONNECTIONS_TABLE = "github-connections"
+GITHUB_CONNECTIONS_TABLE = "org-github-connections"
 
 
 def get_github_connections_table():
@@ -630,10 +616,10 @@ def get_github_connections_table():
     table = dynamodb.create_table(
         TableName=GITHUB_CONNECTIONS_TABLE,
         KeySchema=[
-            {"AttributeName": "user_id", "KeyType": "HASH"},
+            {"AttributeName": "organization_id", "KeyType": "HASH"},
         ],
         AttributeDefinitions=[
-            {"AttributeName": "user_id", "AttributeType": "S"},
+            {"AttributeName": "organization_id", "AttributeType": "S"},
         ],
         BillingMode="PAY_PER_REQUEST",
     )
@@ -642,12 +628,20 @@ def get_github_connections_table():
     return table
 
 
-def save_github_token(user_id: str, token: str, metadata: dict = None, installation_id: str = None, expires_at: str = None) -> bool:
+def save_github_token(
+    org_id: str,
+    user_id: str,
+    token: str,
+    metadata: dict = None,
+    installation_id: str = None,
+    expires_at: str = None
+) -> bool:
     """
-    Save or update GitHub App installation token for a user.
+    Save or update GitHub App installation token for an organization.
 
     Args:
-        user_id: Clerk user ID
+        org_id: Clerk organization ID (owner of the connection)
+        user_id: Clerk user ID (who connected it, stored as connected_by)
         token: GitHub App installation access token
         metadata: Additional metadata (username, avatar_url, etc.)
         installation_id: GitHub App installation ID (needed for token refresh)
@@ -657,7 +651,8 @@ def save_github_token(user_id: str, token: str, metadata: dict = None, installat
     now = datetime.utcnow().isoformat()
 
     item = {
-        "user_id": user_id,
+        "organization_id": org_id,
+        "connected_by": user_id,
         "token": token,
         "metadata": metadata or {},
         "updated_at": now,
@@ -673,15 +668,15 @@ def save_github_token(user_id: str, token: str, metadata: dict = None, installat
     return True
 
 
-def get_github_token(user_id: str) -> Optional[str]:
+def get_github_token(org_id: str) -> Optional[str]:
     """
-    Get GitHub App installation token for a user from DynamoDB.
-    Returns None if not found or token is expired.
+    Get GitHub App installation token for an organization from DynamoDB.
+    Returns None if not found.
     """
     table = get_github_connections_table()
 
     response = table.get_item(
-        Key={"user_id": user_id}
+        Key={"organization_id": org_id}
     )
 
     item = response.get("Item")
@@ -690,18 +685,21 @@ def get_github_token(user_id: str) -> Optional[str]:
     return None
 
 
-def get_github_installation(user_id: str) -> Optional[dict]:
+def get_github_installation(org_id: str) -> Optional[dict]:
     """
     Get complete GitHub App installation data including installation_id and token expiry.
 
+    Args:
+        org_id: Clerk organization ID
+
     Returns:
-        dict with keys: token, installation_id, expires_at, metadata
+        dict with keys: token, installation_id, expires_at, metadata, connected_by
         None if not found
     """
     table = get_github_connections_table()
 
     response = table.get_item(
-        Key={"user_id": user_id}
+        Key={"organization_id": org_id}
     )
 
     item = response.get("Item")
@@ -710,8 +708,7 @@ def get_github_installation(user_id: str) -> Optional[dict]:
             "token": item.get("token"),
             "installation_id": item.get("installation_id"),
             "expires_at": item.get("expires_at"),
-            "metadata": item.get("metadata", {})
+            "metadata": item.get("metadata", {}),
+            "connected_by": item.get("connected_by"),
         }
     return None
-
-

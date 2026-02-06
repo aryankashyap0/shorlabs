@@ -238,7 +238,7 @@ async def create_new_project(
     github_url = f"https://github.com/{request.github_repo}"
 
     # Get GitHub token for private repos
-    github_token = await get_or_refresh_token(user_id)
+    github_token = await get_or_refresh_token(request.organization_id, user_id)
     
     # Normalize root_directory
     root_directory = request.root_directory or "./"
@@ -293,11 +293,11 @@ async def create_new_project(
 
 @router.get("")
 async def get_projects(
-    user_id: str = Depends(get_current_user_id),
+    user_id: str = Depends(get_current_user_id),  # For auth
     org_id: str = Query(...),
 ):
-    """List all projects for current user's organization."""
-    projects = list_projects(user_id, org_id)
+    """List all projects for the organization."""
+    projects = list_projects(org_id)
     return [
         {
             "project_id": p["project_id"],
@@ -370,7 +370,7 @@ async def get_project_details(
 ):
     """Get project details with deployment history."""
 
-    project = get_project_by_key(user_id, project_id, org_id)
+    project = get_project_by_key(org_id, project_id)
     
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -423,11 +423,8 @@ async def get_project_status(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    # Auth check: either user matches OR organization matches
-    is_owner = project.get("user_id") == user_id
-    is_org_match = org_id and project.get("organization_id") == org_id
-    
-    if not (is_owner or is_org_match):
+    # Auth check: organization matches (Clerk ensures user belongs to org)
+    if project.get("organization_id") != org_id:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     return {
@@ -449,11 +446,8 @@ async def get_runtime_logs(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    # Auth check: either user matches OR organization matches
-    is_owner = project.get("user_id") == user_id
-    is_org_match = org_id and project.get("organization_id") == org_id
-    
-    if not (is_owner or is_org_match):
+    # Auth check: organization matches (Clerk ensures user belongs to org)
+    if project.get("organization_id") != org_id:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Use stored function_name if available (new deployments), otherwise derive from github_url (old deployments)
@@ -485,7 +479,7 @@ async def update_project_env_vars(
     org_id: str = Query(...),
 ):
     """Update project environment variables."""
-    project = get_project_by_key(user_id, project_id, org_id)
+    project = get_project_by_key(org_id, project_id)
     
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -517,7 +511,7 @@ async def update_project_fields(
 ):
     """Update project fields like start_command, root_directory, name."""
 
-    project = get_project_by_key(user_id, project_id, org_id)
+    project = get_project_by_key(org_id, project_id)
     
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -560,13 +554,13 @@ async def redeploy_project(
 
     # Use get_project_by_key for strong consistency to ensure we get the latest
     # compute settings (memory, timeout) if they were just updated.
-    project = get_project_by_key(user_id, project_id, org_id)
+    project = get_project_by_key(org_id, project_id)
 
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
     # Get GitHub token for private repos
-    github_token = await get_or_refresh_token(user_id)
+    github_token = await get_or_refresh_token(org_id, user_id)
     
     # Get root_directory and start_command from stored project
     root_directory = project.get("root_directory", "./")
@@ -605,7 +599,7 @@ async def delete_project_endpoint(
 ):
     """Delete a project and all associated AWS resources."""
 
-    project = get_project_by_key(user_id, project_id, org_id)
+    project = get_project_by_key(org_id, project_id)
 
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")

@@ -39,8 +39,11 @@ export async function fetchGitHubRepos(token: string): Promise<GitHubRepo[]> {
     return response.json();
 }
 
-export async function checkGitHubConnection(token: string): Promise<{ connected: boolean }> {
-    const response = await fetch(`${API_BASE_URL}/api/github/status`, {
+export async function checkGitHubConnection(token: string, orgId: string): Promise<{ connected: boolean }> {
+    const url = new URL(`${API_BASE_URL}/api/github/status`);
+    url.searchParams.append("org_id", orgId);
+
+    const response = await fetch(url.toString(), {
         headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -98,8 +101,11 @@ export interface CreateProjectResponse {
     status: string;
 }
 
-export async function fetchProjects(token: string): Promise<Project[]> {
-    const response = await fetch(`${API_BASE_URL}/api/projects`, {
+export async function fetchProjects(token: string, orgId: string): Promise<Project[]> {
+    const url = new URL(`${API_BASE_URL}/api/projects`);
+    url.searchParams.append("org_id", orgId);
+
+    const response = await fetch(url.toString(), {
         headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -114,8 +120,11 @@ export async function fetchProjects(token: string): Promise<Project[]> {
     return response.json();
 }
 
-export async function fetchProject(token: string, projectId: string): Promise<ProjectDetails> {
-    const response = await fetch(`${API_BASE_URL}/api/projects/${projectId}`, {
+export async function fetchProject(token: string, projectId: string, orgId: string): Promise<ProjectDetails> {
+    const url = new URL(`${API_BASE_URL}/api/projects/${projectId}`);
+    url.searchParams.append("org_id", orgId);
+
+    const response = await fetch(url.toString(), {
         headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -130,8 +139,11 @@ export async function fetchProject(token: string, projectId: string): Promise<Pr
     return response.json();
 }
 
-export async function createProject(token: string, data: CreateProjectRequest): Promise<CreateProjectResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/projects`, {
+export async function createProject(token: string, orgId: string, data: CreateProjectRequest): Promise<CreateProjectResponse> {
+    const url = new URL(`${API_BASE_URL}/api/projects`);
+    url.searchParams.append("org_id", orgId);
+
+    const response = await fetch(url.toString(), {
         method: "POST",
         headers: {
             Authorization: `Bearer ${token}`,
@@ -148,8 +160,11 @@ export async function createProject(token: string, data: CreateProjectRequest): 
     return response.json();
 }
 
-export async function getProjectStatus(token: string, projectId: string): Promise<{ project_id: string; status: string; function_url: string | null }> {
-    const response = await fetch(`${API_BASE_URL}/api/projects/${projectId}/status`, {
+export async function getProjectStatus(token: string, projectId: string, orgId: string): Promise<{ project_id: string; status: string; function_url: string | null }> {
+    const url = new URL(`${API_BASE_URL}/api/projects/${projectId}/status`);
+    url.searchParams.append("org_id", orgId);
+
+    const response = await fetch(url.toString(), {
         headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -164,8 +179,11 @@ export async function getProjectStatus(token: string, projectId: string): Promis
     return response.json();
 }
 
-export async function deleteProject(token: string, projectId: string): Promise<{ deleted: boolean }> {
-    const response = await fetch(`${API_BASE_URL}/api/projects/${projectId}`, {
+export async function deleteProject(token: string, projectId: string, orgId: string): Promise<{ deleted: boolean }> {
+    const url = new URL(`${API_BASE_URL}/api/projects/${projectId}`);
+    url.searchParams.append("org_id", orgId);
+
+    const response = await fetch(url.toString(), {
         method: "DELETE",
         headers: {
             Authorization: `Bearer ${token}`,

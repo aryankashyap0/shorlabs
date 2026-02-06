@@ -141,8 +141,12 @@ function ConfigureProjectContent() {
         }
 
         try {
+            const url = new URL(`${API_BASE_URL}/api/github/repos/${encodeURIComponent(repoFullName)}/contents`)
+            if (orgId) url.searchParams.append("org_id", orgId)
+            if (path) url.searchParams.append("path", path)
+
             const response = await fetch(
-                `${API_BASE_URL}/api/github/repos/${encodeURIComponent(repoFullName)}/contents${path ? `?path=${encodeURIComponent(path)}` : ""}`,
+                url.toString(),
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -228,10 +232,12 @@ function ConfigureProjectContent() {
             const token = await getToken()
             if (!token) return
 
-            const url = `${API_BASE_URL}/api/github/repos/${repoFullName}/detect-framework?root_directory=${encodeURIComponent(rootDir)}`
+            const url = new URL(`${API_BASE_URL}/api/github/repos/${repoFullName}/detect-framework`)
+            if (orgId) url.searchParams.append("org_id", orgId)
+            url.searchParams.append("root_directory", rootDir)
 
             const response = await fetch(
-                url,
+                url.toString(),
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 }
