@@ -105,7 +105,7 @@ const BUILD_STEPS = ["CLONING", "PREPARING", "UPLOADING", "BUILDING", "DEPLOYING
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params)
     const router = useRouter()
-    const { getToken, isLoaded, has } = useAuth()
+    const { getToken, isLoaded, has, orgId } = useAuth()
     const { signOut } = useClerk()
     const [data, setData] = useState<ProjectDetails | null>(null)
     const [loading, setLoading] = useState(true)
@@ -172,7 +172,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 })
             }
 
-            const response = await fetch(`${API_BASE_URL}/api/projects/${id}`, {
+            const url = new URL(`${API_BASE_URL}/api/projects/${id}`)
+            if (orgId) url.searchParams.append("org_id", orgId)
+
+            const response = await fetch(url.toString(), {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -205,7 +208,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         setRedeploying(true)
         try {
             const token = await getToken()
-            await fetch(`${API_BASE_URL}/api/projects/${id}/redeploy`, {
+            const url = new URL(`${API_BASE_URL}/api/projects/${id}/redeploy`)
+            if (orgId) url.searchParams.append("org_id", orgId)
+
+            await fetch(url.toString(), {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}` },
             })
@@ -233,7 +239,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 return acc
             }, {} as Record<string, string>)
 
-            const response = await fetch(`${API_BASE_URL}/api/projects/${id}/env-vars`, {
+            const url = new URL(`${API_BASE_URL}/api/projects/${id}/env-vars`)
+            if (orgId) url.searchParams.append("org_id", orgId)
+
+            const response = await fetch(url.toString(), {
                 method: "PUT",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -265,7 +274,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         setSavingStartCommand(true)
         try {
             const token = await getToken()
-            const response = await fetch(`${API_BASE_URL}/api/projects/${id}`, {
+            const url = new URL(`${API_BASE_URL}/api/projects/${id}`)
+            if (orgId) url.searchParams.append("org_id", orgId)
+
+            const response = await fetch(url.toString(), {
                 method: "PATCH",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -299,7 +311,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         setSavingCompute(true)
         try {
             const token = await getToken()
-            const response = await fetch(`${API_BASE_URL}/api/projects/${id}`, {
+            const url = new URL(`${API_BASE_URL}/api/projects/${id}`)
+            if (orgId) url.searchParams.append("org_id", orgId)
+
+            const response = await fetch(url.toString(), {
                 method: "PATCH",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -359,7 +374,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 return
             }
 
-            const response = await fetch(`${API_BASE_URL}/api/projects/${id}`, {
+            const url = new URL(`${API_BASE_URL}/api/projects/${id}`)
+            if (orgId) url.searchParams.append("org_id", orgId)
+
+            const response = await fetch(url.toString(), {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

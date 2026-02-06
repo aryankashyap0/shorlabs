@@ -8,7 +8,7 @@ from typing import Optional
 from datetime import datetime
 
 import boto3
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from api.auth import get_current_user_id
@@ -38,6 +38,7 @@ router = APIRouter(prefix="/api/projects", tags=["projects"])
 
 class CreateProjectRequest(BaseModel):
     name: str
+    organization_id: str
     github_repo: str  # e.g., "aryankashyap0/amber-backend"
     root_directory: Optional[str] = "./"  # Root directory for monorepos
     env_vars: Optional[dict] = None  # Environment variables
@@ -49,6 +50,7 @@ class CreateProjectRequest(BaseModel):
 
 class ProjectResponse(BaseModel):
     project_id: str
+    organization_id: Optional[str] = None
     name: str
     github_url: str
     github_repo: str
@@ -249,6 +251,7 @@ async def create_new_project(
     # Create project in DynamoDB
     project = create_project(
         user_id=user_id,
+        organization_id=request.organization_id,
         name=request.name,
         github_url=github_url,
         github_repo=request.github_repo,
@@ -275,6 +278,7 @@ async def create_new_project(
     
     return {
         "project_id": project["project_id"],
+        "organization_id": project.get("organization_id"),
         "name": project["name"],
         "github_url": project["github_url"],
         "status": project["status"],
@@ -284,12 +288,16 @@ async def create_new_project(
 
 
 @router.get("")
-async def get_projects(user_id: str = Depends(get_current_user_id)):
-    """List all projects for current user."""
-    projects = list_projects(user_id)
+async def get_projects(
+    user_id: str = Depends(get_current_user_id),
+    org_id: Optional[str] = Query(None),
+):
+    """List all projects for current user or organization."""
+    projects = list_projects(user_id, org_id)
     return [
         {
             "project_id": p["project_id"],
+            "organization_id": p.get("organization_id"),
             "name": p["name"],
             "github_url": p["github_url"],
             "github_repo": p["github_repo"],
@@ -350,10 +358,11 @@ async def get_user_usage_endpoint(user_id: str = Depends(get_current_user_id)):
 async def get_project_details(
     project_id: str,
     user_id: str = Depends(get_current_user_id),
+    org_id: Optional[str] = Query(None),
 ):
     """Get project details with deployment history."""
 
-    project = get_project_by_key(user_id, project_id)
+    project = get_project_by_key(user_id, project_id, org_id)
     
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -363,6 +372,7 @@ async def get_project_details(
     return {
         "project": {
             "project_id": project["project_id"],
+            "organization_id": project.get("organization_id"),
             "name": project["name"],
             "github_url": project["github_url"],
             "github_repo": project["github_repo"],
@@ -454,9 +464,10 @@ async def update_project_env_vars(
     project_id: str,
     request: UpdateEnvVarsRequest,
     user_id: str = Depends(get_current_user_id),
+    org_id: Optional[str] = Query(None),
 ):
     """Update project environment variables."""
-    project = get_project_by_key(user_id, project_id)
+    project = get_project_by_key(user_id, project_id, org_id)
     
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -484,10 +495,11 @@ async def update_project_fields(
     project_id: str,
     request: UpdateProjectRequest,
     user_id: str = Depends(get_current_user_id),
+    org_id: Optional[str] = Query(None),
 ):
     """Update project fields like start_command, root_directory, name."""
 
-    project = get_project_by_key(user_id, project_id)
+    project = get_project_by_key(user_id, project_id, org_id)
     
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -523,13 +535,14 @@ async def update_project_fields(
 async def redeploy_project(
     project_id: str,
     user_id: str = Depends(get_current_user_id),
+    org_id: Optional[str] = Query(None),
 ):
     """Trigger a redeployment of the project."""
     from api.routes.github import get_or_refresh_token
 
     # Use get_project_by_key for strong consistency to ensure we get the latest
     # compute settings (memory, timeout) if they were just updated.
-    project = get_project_by_key(user_id, project_id)
+    project = get_project_by_key(user_id, project_id, org_id)
 
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -570,10 +583,11 @@ async def redeploy_project(
 async def delete_project_endpoint(
     project_id: str,
     user_id: str = Depends(get_current_user_id),
+    org_id: Optional[str] = Query(None),
 ):
     """Delete a project and all associated AWS resources."""
 
-    project = get_project_by_key(user_id, project_id)
+    project = get_project_by_key(user_id, project_id, org_id)
 
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")

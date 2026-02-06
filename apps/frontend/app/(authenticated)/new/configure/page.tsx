@@ -64,7 +64,7 @@ interface DirectoryState {
 function ConfigureProjectContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const { getToken, has } = useAuth()
+    const { getToken, has, orgId } = useAuth()
     const { signOut } = useClerk()
     const isPro = has?.({ plan: 'shorlabs_pro_user' }) ?? false
     const { isOpen: upgradeOpen, openUpgradeModal, closeUpgradeModal } = useUpgradeModal()
@@ -107,7 +107,10 @@ function ConfigureProjectContent() {
                 const token = await getToken()
                 if (!token) return
 
-                const response = await fetch(`${API_BASE_URL}/api/projects`, {
+                const url = new URL(`${API_BASE_URL}/api/projects`)
+                if (orgId) url.searchParams.append("org_id", orgId)
+
+                const response = await fetch(url.toString(), {
                     headers: { Authorization: `Bearer ${token}` },
                 })
 
@@ -120,7 +123,7 @@ function ConfigureProjectContent() {
             }
         }
         fetchProjects()
-    }, [getToken])
+    }, [getToken, orgId])
 
     // Redirect if no repo selected
     useEffect(() => {
@@ -282,6 +285,7 @@ function ConfigureProjectContent() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
+                    organization_id: orgId || "",
                     name: projectName.trim(),
                     github_repo: repoFullName,
                     root_directory: rootDirectory,

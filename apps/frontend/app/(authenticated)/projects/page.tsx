@@ -38,7 +38,7 @@ const STATUS_CONFIG: Record<string, { dot: string; label: string; bg: string }> 
 }
 
 export default function ProjectsPage() {
-    const { getToken, isLoaded, has } = useAuth()
+    const { getToken, isLoaded, has, orgId } = useAuth()
     const isPro = has?.({ plan: 'shorlabs_pro_user' })
     const { signOut } = useClerk()
     const [searchQuery, setSearchQuery] = useState("")
@@ -58,7 +58,12 @@ export default function ProjectsPage() {
                 return
             }
 
-            const response = await fetch(`${API_BASE_URL}/api/projects`, {
+            const url = new URL(`${API_BASE_URL}/api/projects`)
+            if (orgId) {
+                url.searchParams.append("org_id", orgId)
+            }
+
+            const response = await fetch(url.toString(), {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

@@ -191,6 +191,7 @@ def get_project_by_subdomain(subdomain: str) -> Optional[dict]:
 
 def create_project(
     user_id: str,
+    organization_id: str,
     name: str,
     github_url: str,
     github_repo: str,
@@ -214,11 +215,15 @@ def create_project(
     # Build custom URL
     custom_url = f"https://{subdomain}.{SHORLABS_DOMAIN}"
 
+    # Determine PK based on organization_id
+    pk = f"ORG#{organization_id}" if organization_id else f"USER#{user_id}"
+
     item = {
-        "PK": f"USER#{user_id}",
+        "PK": pk,
         "SK": f"PROJECT#{project_id}",
         "project_id": project_id,
         "user_id": user_id,
+        "organization_id": organization_id,
         "name": name,
         "github_url": github_url,
         "github_repo": github_repo,
@@ -267,17 +272,20 @@ def get_project(project_id: str) -> Optional[dict]:
     return project_items[0] if project_items else None
 
 
-def get_project_by_key(user_id: str, project_id: str) -> Optional[dict]:
+def get_project_by_key(user_id: str, project_id: str, org_id: Optional[str] = None) -> Optional[dict]:
     """
-    Get a project by User ID and Project ID using direct GetItem.
+    Get a project by User ID (or Org ID) and Project ID using direct GetItem.
     
     This provides strong consistency, suitable for read-after-write scenarios
     like redeploying immediately after updates.
     """
     table = get_or_create_table()
+    
+    pk = f"ORG#{org_id}" if org_id else f"USER#{user_id}"
+    
     response = table.get_item(
         Key={
-            "PK": f"USER#{user_id}",
+            "PK": pk,
             "SK": f"PROJECT#{project_id}",
         },
         ConsistentRead=True,
@@ -285,11 +293,14 @@ def get_project_by_key(user_id: str, project_id: str) -> Optional[dict]:
     return response.get("Item")
 
 
-def list_projects(user_id: str) -> list:
-    """List all projects for a user."""
+def list_projects(user_id: str, org_id: Optional[str] = None) -> list:
+    """List all projects for a user or organization."""
     table = get_or_create_table()
+    
+    pk = f"ORG#{org_id}" if org_id else f"USER#{user_id}"
+    
     response = table.query(
-        KeyConditionExpression=Key("PK").eq(f"USER#{user_id}")
+        KeyConditionExpression=Key("PK").eq(pk)
         & Key("SK").begins_with("PROJECT#"),
     )
     return response.get("Items", [])
