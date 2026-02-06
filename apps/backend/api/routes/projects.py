@@ -407,6 +407,7 @@ async def get_project_details(
 async def get_project_status(
     project_id: str,
     user_id: str = Depends(get_current_user_id),
+    org_id: Optional[str] = Query(None),
 ):
     """Get current project status (for polling)."""
     project = get_project(project_id)
@@ -414,7 +415,11 @@ async def get_project_status(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    if project.get("user_id") != user_id:
+    # Auth check: either user matches OR organization matches
+    is_owner = project.get("user_id") == user_id
+    is_org_match = org_id and project.get("organization_id") == org_id
+    
+    if not (is_owner or is_org_match):
         raise HTTPException(status_code=403, detail="Not authorized")
     
     return {
@@ -428,6 +433,7 @@ async def get_project_status(
 async def get_runtime_logs(
     project_id: str,
     user_id: str = Depends(get_current_user_id),
+    org_id: Optional[str] = Query(None),
 ):
     """Fetch runtime logs for a project's Lambda function."""
     project = get_project(project_id)
@@ -435,7 +441,11 @@ async def get_runtime_logs(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    if project.get("user_id") != user_id:
+    # Auth check: either user matches OR organization matches
+    is_owner = project.get("user_id") == user_id
+    is_org_match = org_id and project.get("organization_id") == org_id
+    
+    if not (is_owner or is_org_match):
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Use stored function_name if available (new deployments), otherwise derive from github_url (old deployments)

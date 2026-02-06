@@ -87,7 +87,7 @@ export default function ProjectsPage() {
         } finally {
             setLoading(false)
         }
-    }, [getToken, signOut])
+    }, [getToken, signOut, orgId])
 
     useEffect(() => {
         if (isLoaded) {

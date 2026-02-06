@@ -344,8 +344,11 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         setLogsLoading(true)
         try {
             const token = await getToken()
+            const url = new URL(`${API_BASE_URL}/api/projects/${id}/runtime`)
+            if (orgId) url.searchParams.append("org_id", orgId)
+
             const response = await fetch(
-                `${API_BASE_URL}/api/projects/${id}/runtime`,
+                url.toString(),
                 { headers: { Authorization: `Bearer ${token}` } }
             )
             if (response.ok) {
@@ -357,7 +360,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         } finally {
             setLogsLoading(false)
         }
-    }, [getToken, id])
+    }, [getToken, id, orgId])
 
     // Fetch logs when logs tab is selected
     useEffect(() => {
@@ -401,7 +404,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         } finally {
             setLoading(false)
         }
-    }, [getToken, signOut, id])
+    }, [getToken, signOut, id, orgId])
 
     useEffect(() => {
         if (isLoaded) {
