@@ -432,16 +432,49 @@ def update_deployment(project_id: str, deploy_id: str, updates: dict) -> Optiona
 
 
 # ─────────────────────────────────────────────────────────────
-# USAGE METRICS OPERATIONS
+# USAGE METRICS OPERATIONS (Organization-level billing)
 # ─────────────────────────────────────────────────────────────
 
-# Usage metrics table name
-USAGE_TABLE_NAME = "user-usage-metrics"
+# Usage metrics table - keyed by organization_id (orgs are the billing entity)
+ORG_USAGE_TABLE_NAME = "org-usage-metrics"
+
+
+def get_or_create_org_usage_table():
+    """
+    Get or create the organization usage metrics table.
+    
+    Key Schema:
+        - organization_id (HASH/Partition Key): The billing entity
+        - period (RANGE/Sort Key): Billing period in YYYY-MM format
+    """
+    try:
+        table = dynamodb.Table(ORG_USAGE_TABLE_NAME)
+        table.load()
+        return table
+    except dynamodb.meta.client.exceptions.ResourceNotFoundException:
+        pass
+
+    print(f"📦 Creating DynamoDB table: {ORG_USAGE_TABLE_NAME}")
+    table = dynamodb.create_table(
+        TableName=ORG_USAGE_TABLE_NAME,
+        KeySchema=[
+            {"AttributeName": "organization_id", "KeyType": "HASH"},
+            {"AttributeName": "period", "KeyType": "RANGE"},
+        ],
+        AttributeDefinitions=[
+            {"AttributeName": "organization_id", "AttributeType": "S"},
+            {"AttributeName": "period", "AttributeType": "S"},
+        ],
+        BillingMode="PAY_PER_REQUEST",
+    )
+    table.wait_until_exists()
+    print(f"✅ Created DynamoDB table: {ORG_USAGE_TABLE_NAME}")
+    return table
 
 
 def get_usage_table():
-    """Get the usage metrics table."""
-    return dynamodb.Table(USAGE_TABLE_NAME)
+    """Get the organization usage metrics table (creates if needed)."""
+    return get_or_create_org_usage_table()
 
 
 def get_current_period() -> str:
@@ -449,14 +482,13 @@ def get_current_period() -> str:
     return datetime.utcnow().strftime("%Y-%m")
 
 
-def get_user_usage(user_id: str, period: str = None, org_id: str = None) -> Optional[dict]:
+def get_org_usage(org_id: str, period: str = None) -> Optional[dict]:
     """
-    Get usage metrics for a user in a specific period, filtered by organization.
+    Get usage metrics for an organization in a specific billing period.
     
     Args:
-        user_id: User ID
+        org_id: Organization ID (the billing entity)
         period: Billing period (YYYY-MM). Defaults to current period.
-        org_id: Organization ID to filter by (required in org-only mode)
         
     Returns:
         Usage dict with requests and gb_seconds, or None if not found
@@ -469,29 +501,22 @@ def get_user_usage(user_id: str, period: str = None, org_id: str = None) -> Opti
     try:
         response = table.get_item(
             Key={
-                "user_id": user_id,
+                "organization_id": org_id,
                 "period": period,
             }
         )
-        item = response.get("Item")
-        
-        # If org_id provided, verify it matches
-        if item and org_id:
-            if item.get("organization_id") != org_id:
-                return None  # Usage belongs to different org
-        
-        return item
+        return response.get("Item")
     except Exception as e:
-        print(f"Error getting usage for user {user_id}: {e}")
+        print(f"Error getting usage for org {org_id}: {e}")
         return None
 
 
-def update_user_usage(user_id: str, period: str, metrics: dict) -> dict:
+def update_org_usage(org_id: str, period: str, metrics: dict) -> dict:
     """
-    Update usage metrics for a user in a specific period.
+    Update usage metrics for an organization in a specific period.
     
     Args:
-        user_id: User ID
+        org_id: Organization ID (the billing entity)
         period: Billing period (YYYY-MM)
         metrics: Dict with 'requests' and 'gb_seconds' keys
         
@@ -502,7 +527,7 @@ def update_user_usage(user_id: str, period: str, metrics: dict) -> dict:
     now = datetime.utcnow().isoformat()
     
     item = {
-        "user_id": user_id,
+        "organization_id": org_id,
         "period": period,
         "requests": metrics.get("requests", 0),
         "gb_seconds": Decimal(str(metrics.get("gb_seconds", 0.0))),  # DynamoDB requires Decimal
@@ -514,18 +539,18 @@ def update_user_usage(user_id: str, period: str, metrics: dict) -> dict:
     return item
 
 
-def increment_user_usage(
-    user_id: str,
+def increment_org_usage(
+    org_id: str,
     period: str,
     requests: int,
     gb_seconds: float,
     function_name: str = None
 ) -> dict:
     """
-    Increment usage metrics for a user atomically.
+    Increment usage metrics for an organization atomically.
     
     Args:
-        user_id: User ID
+        org_id: Organization ID (the billing entity)
         period: Billing period (YYYY-MM)
         requests: Number of requests to add
         gb_seconds: GB-Seconds to add
@@ -563,7 +588,7 @@ def increment_user_usage(
     try:
         update_params = {
             "Key": {
-                "user_id": user_id,
+                "organization_id": org_id,
                 "period": period,
             },
             "UpdateExpression": update_expr,
@@ -578,7 +603,7 @@ def increment_user_usage(
         return response.get("Attributes")
     except dynamodb.meta.client.exceptions.ResourceNotFoundException:
         # Item doesn't exist yet, create it
-        return update_user_usage(user_id, period, {
+        return update_org_usage(org_id, period, {
             "requests": requests,
             "gb_seconds": gb_seconds,
             "functions": {function_name: {"requests": requests, "gb_seconds": gb_seconds}} if function_name else {},

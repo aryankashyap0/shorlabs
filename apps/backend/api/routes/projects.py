@@ -22,7 +22,7 @@ from api.db.dynamodb import (
     create_deployment,
     list_deployments,
     update_deployment,
-    get_user_usage,
+    get_org_usage,
     get_current_period,
 )
 
@@ -317,14 +317,15 @@ async def get_projects(
 
 
 @router.get("/usage")
-async def get_user_usage_endpoint(
-    user_id: str = Depends(get_current_user_id),
+async def get_org_usage_endpoint(
+    user_id: str = Depends(get_current_user_id),  # Still needed for auth
     org_id: str = Query(...),
 ):
     """
-    Get current user's usage metrics for the current billing period.
+    Get organization's usage metrics for the current billing period.
     
-    Returns aggregated usage data with tier-based limits.
+    Usage is tracked per organization (the billing entity), not per user.
+    This aligns with industry standards (Vercel, AWS, etc.) where organizations pay for usage.
     
     Limits:
     - Free: 1M requests, 100K GB-seconds
@@ -333,8 +334,8 @@ async def get_user_usage_endpoint(
     # Get current billing period
     period = get_current_period()
     
-    # Fetch usage from DynamoDB (filtered by org_id)
-    usage_data = get_user_usage(user_id, period, org_id)
+    # Fetch usage from DynamoDB by organization
+    usage_data = get_org_usage(org_id, period)
     
     # Extract metrics, default to 0 if no data yet
     current_requests = int(usage_data.get("requests", 0)) if usage_data else 0

@@ -51,10 +51,18 @@ const fetcher = async (url: string, token: string): Promise<Usage> => {
     return res.json()
 }
 
+/**
+ * Hook to fetch organization-level usage metrics.
+ * 
+ * Usage is tracked per organization (the billing entity), not per user.
+ * This aligns with industry standards where organizations pay for resources.
+ * 
+ * @param isPro - Whether the org has a Pro subscription (affects limits)
+ */
 export function useUsage(isPro: boolean = false): UseUsageReturn {
     const { getToken, isLoaded, orgId } = useAuth()
 
-    // Build URL with org_id parameter
+    // Build URL with org_id parameter (usage is tracked per organization)
     const usageUrl = orgId
         ? `${API_BASE_URL}/api/projects/usage?org_id=${orgId}`
         : null  // Don't fetch if no org selected

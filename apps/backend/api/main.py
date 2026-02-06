@@ -35,9 +35,10 @@ ALLOWED_ORIGINS = [o for o in ALLOWED_ORIGINS if o]
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan events."""
-    # Startup: ensure DynamoDB table exists
-    from api.db.dynamodb import get_or_create_table
-    get_or_create_table()
+    # Startup: ensure DynamoDB tables exist
+    from api.db.dynamodb import get_or_create_table, get_or_create_org_usage_table
+    get_or_create_table()  # Projects table
+    get_or_create_org_usage_table()  # Org usage metrics table
     yield
     # Shutdown: nothing to do
 

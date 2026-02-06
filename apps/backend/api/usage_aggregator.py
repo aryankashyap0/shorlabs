@@ -18,7 +18,7 @@ from boto3.dynamodb.conditions import Key
 from api.db.dynamodb import (
     get_or_create_table,
     get_current_period,
-    increment_user_usage,
+    increment_org_usage,
 )
 from deployer import extract_project_name
 from deployer.aws.lambda_service import get_lambda_function_name
@@ -155,30 +155,30 @@ def aggregate_usage_metrics():
         print("✅ No projects to aggregate")
         return
     
-    # Group projects by user_id
-    users_projects: Dict[str, List[Dict]] = {}
+    # Group projects by organization_id (orgs are the billing entity)
+    orgs_projects: Dict[str, List[Dict]] = {}
     for project in projects:
-        user_id = project.get("user_id")
-        if not user_id:
+        org_id = project.get("organization_id")
+        if not org_id:
             continue
-        if user_id not in users_projects:
-            users_projects[user_id] = []
-        users_projects[user_id].append(project)
+        if org_id not in orgs_projects:
+            orgs_projects[org_id] = []
+        orgs_projects[org_id].append(project)
     
-    print(f"👥 Aggregating for {len(users_projects)} users")
+    print(f"🏢 Aggregating for {len(orgs_projects)} organizations")
     
     # Get current billing period
     period = get_current_period()
     
-    # Aggregate metrics for each user
+    # Aggregate metrics for each organization
     total_requests = 0
     total_gb_seconds = 0.0
     
-    for user_id, user_projects in users_projects.items():
-        user_requests = 0
-        user_gb_seconds = 0.0
+    for org_id, org_projects in orgs_projects.items():
+        org_requests = 0
+        org_gb_seconds = 0.0
         
-        for project in user_projects:
+        for project in org_projects:
             # Skip if project is not LIVE
             if project.get("status") != "LIVE":
                 continue
@@ -205,27 +205,27 @@ def aggregate_usage_metrics():
                 
                 if invocations > 0 or gb_seconds > 0:
                     print(f"  📈 {function_name}: {invocations} invocations, {gb_seconds:.2f} GB-s")
-                    user_requests += invocations
-                    user_gb_seconds += gb_seconds
+                    org_requests += invocations
+                    org_gb_seconds += gb_seconds
                     
             except Exception as e:
                 print(f"  ❌ Error aggregating {function_name}: {e}")
                 continue
         
-        # Update user's usage in DynamoDB if there's any activity
-        if user_requests > 0 or user_gb_seconds > 0:
+        # Update organization's usage in DynamoDB if there's any activity
+        if org_requests > 0 or org_gb_seconds > 0:
             try:
-                increment_user_usage(
-                    user_id=user_id,
+                increment_org_usage(
+                    org_id=org_id,
                     period=period,
-                    requests=user_requests,
-                    gb_seconds=user_gb_seconds,
+                    requests=org_requests,
+                    gb_seconds=org_gb_seconds,
                 )
-                print(f"✅ Updated usage for user {user_id}: +{user_requests} requests, +{user_gb_seconds:.2f} GB-s")
-                total_requests += user_requests
-                total_gb_seconds += user_gb_seconds
+                print(f"✅ Updated usage for org {org_id}: +{org_requests} requests, +{org_gb_seconds:.2f} GB-s")
+                total_requests += org_requests
+                total_gb_seconds += org_gb_seconds
             except Exception as e:
-                print(f"❌ Failed to update usage for user {user_id}: {e}")
+                print(f"❌ Failed to update usage for org {org_id}: {e}")
     
     print(f"🎉 Aggregation complete!")
     print(f"   Total: {total_requests} requests, {total_gb_seconds:.2f} GB-Seconds")
