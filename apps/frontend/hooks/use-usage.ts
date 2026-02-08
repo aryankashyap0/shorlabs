@@ -7,8 +7,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 // Tier limits
 const FREE_LIMITS = {
-    requests: 100_000,        // 100K requests
-    gbSeconds: 10_000,        // 10K GB-seconds
+    requests: 50_000,         // 50K requests
+    gbSeconds: 5_000,         // 5K GB-seconds
 }
 
 const PRO_LIMITS = {
