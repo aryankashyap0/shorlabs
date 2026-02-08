@@ -1,28 +1,19 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, Instrument_Sans, JetBrains_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { AmplitudeProvider } from "@/components/AmplitudeProvider";
 import "./globals.css";
 
-// Instrument Serif - for headlines (matching White House website)
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument-serif",
+// Geist Sans - clean, modern sans-serif by Vercel
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
-  weight: "400",
   display: "swap",
 });
 
-// Instrument Sans - for body text (matching White House website)
-const instrumentSans = Instrument_Sans({
-  variable: "--font-instrument-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-// Monospace font for code
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-mono",
+// Geist Mono - monospace companion
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
   display: "swap",
 });
@@ -46,7 +37,7 @@ export default function RootLayout({
     >
       <html lang="en" suppressHydrationWarning>
         <body
-          className={`${instrumentSerif.variable} ${instrumentSans.variable} ${jetbrainsMono.variable} antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
           suppressHydrationWarning
         >
           <AmplitudeProvider>

@@ -25,13 +25,12 @@ const HeroSection = () => {
 
                     {/* Headline */}
                     <h1 className="text-3xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-gray-900 leading-[1.15] tracking-tight max-w-2xl">
-                        Deploy, Manage, and Scale Your Python Apps.
-
+                        Deploy backends without the hassle.
                     </h1>
 
                     {/* Subtitle */}
                     <p className="text-base sm:text-lg text-gray-500 max-w-lg leading-relaxed">
-                        A modern platform for deploying, managing, and scaling your FastAPI/Flask/Django apps. Connect GitHub and go live.
+                        A modern platform for deploying, managing, and scaling your Python and Node.js backends. Connect GitHub and go live.
                     </p>
 
                     {/* CTA Buttons */}
