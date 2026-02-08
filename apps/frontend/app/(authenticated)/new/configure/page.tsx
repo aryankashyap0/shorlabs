@@ -102,13 +102,15 @@ function ConfigureProjectContent() {
 
     // Fetch project count on mount
     useEffect(() => {
+        if (!orgId) return
+
         const fetchProjects = async () => {
             try {
                 const token = await getToken()
                 if (!token) return
 
                 const url = new URL(`${API_BASE_URL}/api/projects`)
-                if (orgId) url.searchParams.append("org_id", orgId)
+                url.searchParams.append("org_id", orgId)
 
                 const response = await fetch(url.toString(), {
                     headers: { Authorization: `Bearer ${token}` },

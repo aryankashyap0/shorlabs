@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from pydantic import BaseModel
 
 from api.auth import get_current_user_id
-from api.db.dynamodb import save_github_token, get_github_token, get_github_installation
+from api.db.dynamodb import save_github_token, get_github_token, get_github_installation, delete_github_connection
 from deployer.utils.frameworks import detect_framework
 
 router = APIRouter(prefix="/api/github", tags=["github"])
@@ -331,10 +331,48 @@ async def github_connection_status(
     if not installation:
         return {"connected": False}
 
+    metadata = installation.get("metadata", {})
     return {
         "connected": True,
-        "username": installation.get("metadata", {}).get("username"),
+        "username": metadata.get("username"),
+        "avatar_url": metadata.get("avatar_url"),
+        "account_type": metadata.get("account_type"),
+        "installation_id": installation.get("installation_id"),
     }
+
+
+@router.delete("/disconnect")
+async def disconnect_github(
+    user_id: str = Depends(get_current_user_id),
+    org_id: str = Query(..., description="Organization ID"),
+):
+    """Disconnect GitHub App installation for the organization."""
+    installation = get_github_installation(org_id)
+
+    if not installation:
+        raise HTTPException(status_code=404, detail="No GitHub connection found")
+
+    # Optionally revoke the installation on GitHub's side
+    installation_id = installation.get("installation_id")
+    if installation_id:
+        try:
+            app_jwt = generate_github_app_jwt()
+            async with httpx.AsyncClient() as client:
+                await client.delete(
+                    f"https://api.github.com/app/installations/{installation_id}",
+                    headers={
+                        "Authorization": f"Bearer {app_jwt}",
+                        "Accept": "application/vnd.github+json",
+                        "X-GitHub-Api-Version": "2022-11-28",
+                    },
+                )
+        except Exception as e:
+            # Log but don't fail - we still want to remove our local record
+            print(f"[GitHub] Failed to revoke installation on GitHub: {e}")
+
+    deleted = delete_github_connection(org_id)
+
+    return {"disconnected": deleted}
 
 
 @router.get("/repos/{repo:path}/contents")

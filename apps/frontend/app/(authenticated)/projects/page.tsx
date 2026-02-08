@@ -90,10 +90,10 @@ export default function ProjectsPage() {
     }, [getToken, signOut, orgId])
 
     useEffect(() => {
-        if (isLoaded) {
+        if (isLoaded && orgId) {
             fetchProjects()
         }
-    }, [isLoaded, fetchProjects])
+    }, [isLoaded, orgId, fetchProjects])
 
     useEffect(() => {
         const hasInProgress = projects.some(p =>

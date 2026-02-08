@@ -58,7 +58,7 @@ export default function ImportRepositoryPage() {
 
     // Consolidated initialization function - checks connection AND fetches repos in sequence
     const initializePage = useCallback(async () => {
-        if (!userLoaded) {
+        if (!userLoaded || !orgId) {
             setPageState({ status: 'initializing' })
             return
         }

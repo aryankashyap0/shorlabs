@@ -712,3 +712,23 @@ def get_github_installation(org_id: str) -> Optional[dict]:
             "connected_by": item.get("connected_by"),
         }
     return None
+
+
+def delete_github_connection(org_id: str) -> bool:
+    """
+    Delete the GitHub App installation connection for an organization.
+
+    Args:
+        org_id: Clerk organization ID
+
+    Returns:
+        True if deleted, False if not found
+    """
+    table = get_github_connections_table()
+
+    response = table.delete_item(
+        Key={"organization_id": org_id},
+        ReturnValues="ALL_OLD",
+    )
+
+    return "Attributes" in response

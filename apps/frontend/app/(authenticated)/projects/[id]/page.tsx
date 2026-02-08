@@ -407,10 +407,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     }, [getToken, signOut, id, orgId])
 
     useEffect(() => {
-        if (isLoaded) {
+        if (isLoaded && orgId) {
             fetchProject()
         }
-    }, [isLoaded, fetchProject])
+    }, [isLoaded, orgId, fetchProject])
 
     useEffect(() => {
         if (!data) return
