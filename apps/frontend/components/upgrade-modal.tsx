@@ -37,7 +37,7 @@ const plans: {
             { label: "20K GB-Seconds", icon: Zap },
             { label: "1 GB Memory", icon: Cpu },
             { label: "Up to 30s Timeout", icon: Clock },
-            { label: "512 MB Storage", icon: HardDrive },
+            { label: "512 MB Temp Disk", icon: HardDrive },
         ],
     },
     {
@@ -53,7 +53,7 @@ const plans: {
             { label: "400K GB-Seconds", icon: Zap },
             { label: "Up to 4 GB Memory", icon: Cpu },
             { label: "Up to 300s Timeout", icon: Clock },
-            { label: "2 GB Storage", icon: HardDrive },
+            { label: "2 GB Temp Disk", icon: HardDrive },
         ],
     },
 ]
