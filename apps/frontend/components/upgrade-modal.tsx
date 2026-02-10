@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useCustomer } from 'autumn-js/react'
-import { Check, Loader2 } from 'lucide-react'
+import { Clock, Cpu, FolderOpen, Globe, HardDrive, Loader2, type LucideIcon, Zap } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,20 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { useIsPro } from '@/hooks/use-is-pro'
 import { cn } from '@/lib/utils'
 
-const plans = [
+interface Feature {
+    label: string
+    icon: LucideIcon
+}
+
+const plans: {
+    id: string
+    name: string
+    description: string
+    price: string
+    period: string
+    highlighted?: boolean
+    features: Feature[]
+}[] = [
     {
         id: "hobby",
         name: "Hobby",
@@ -19,12 +32,12 @@ const plans = [
         price: "$0",
         period: "/ month",
         features: [
-            "Unlimited Projects",
-            "50K Requests/Month",
-            "20K GB-Seconds",
-            "1 GB Memory",
-            "Up to 30s Timeout",
-            "512 MB Storage",
+            { label: "Unlimited Projects", icon: FolderOpen },
+            { label: "50K Requests/Month", icon: Globe },
+            { label: "20K GB-Seconds", icon: Zap },
+            { label: "1 GB Memory", icon: Cpu },
+            { label: "Up to 30s Timeout", icon: Clock },
+            { label: "512 MB Storage", icon: HardDrive },
         ],
     },
     {
@@ -35,12 +48,12 @@ const plans = [
         period: "/ month",
         highlighted: true,
         features: [
-            "Unlimited Projects",
-            "1M Requests/Month",
-            "400K GB-Seconds",
-            "Up to 4 GB Memory",
-            "Up to 300s Timeout",
-            "2 GB Storage",
+            { label: "Unlimited Projects", icon: FolderOpen },
+            { label: "1M Requests/Month", icon: Globe },
+            { label: "400K GB-Seconds", icon: Zap },
+            { label: "Up to 4 GB Memory", icon: Cpu },
+            { label: "Up to 300s Timeout", icon: Clock },
+            { label: "2 GB Storage", icon: HardDrive },
         ],
     },
 ]
@@ -199,15 +212,18 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                                         </Button>
 
                                         <ul className="mt-4 space-y-2">
-                                            {plan.features.map((feature) => (
-                                                <li
-                                                    key={feature}
-                                                    className="flex items-center gap-2 text-xs text-zinc-600"
-                                                >
-                                                    <Check className="size-3.5 shrink-0 text-zinc-400" strokeWidth={2.4} />
-                                                    {feature}
-                                                </li>
-                                            ))}
+                                            {plan.features.map((feature) => {
+                                                const Icon = feature.icon
+                                                return (
+                                                    <li
+                                                        key={feature.label}
+                                                        className="flex items-center gap-2 text-xs text-zinc-600"
+                                                    >
+                                                        <Icon className="size-3.5 shrink-0 text-zinc-400" strokeWidth={2} />
+                                                        {feature.label}
+                                                    </li>
+                                                )
+                                            })}
                                         </ul>
                                     </CardContent>
                                 </Card>
