@@ -20,11 +20,11 @@ const plans = [
         period: "/ month",
         features: [
             "Unlimited Projects",
-            "1 GB Memory",
-            "Up to 30 Second Timeout",
-            "512 MB Storage",
             "50K Requests/Month",
             "20K GB-Seconds",
+            "1 GB Memory",
+            "Up to 30s Timeout",
+            "512 MB Storage",
         ],
     },
     {
@@ -36,11 +36,11 @@ const plans = [
         highlighted: true,
         features: [
             "Unlimited Projects",
-            "Up to 4 GB Memory",
-            "Up to 300 Second Timeout",
-            "2 GB Storage",
             "1M Requests/Month",
             "400K GB-Seconds",
+            "Up to 4 GB Memory",
+            "Up to 300s Timeout",
+            "2 GB Storage",
         ],
     },
 ]
@@ -160,8 +160,8 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                                                     Current
                                                 </Badge>
                                             ) : plan.highlighted ? (
-                                                <Badge className="rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] font-medium text-white">
-                                                    Popular
+                                                <Badge className="rounded-full bg-gradient-to-r from-violet-500 to-blue-500 px-2 py-0.5 text-[10px] font-medium text-white">
+                                                    14 day free trial
                                                 </Badge>
                                             ) : null}
                                         </div>
@@ -178,7 +178,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                                         </CardDescription>
                                     </CardHeader>
 
-                                    <CardContent className="flex flex-1 flex-col px-4 pb-4 pt-0">
+                                    <CardContent className="flex flex-1 flex-col px-4  pt-0">
                                         <Button
                                             type="button"
                                             onClick={() => handleSelectPlan(plan.id)}
