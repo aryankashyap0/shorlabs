@@ -119,7 +119,7 @@ export default function ProjectsPage() {
                     <h1 className="text-2xl font-semibold text-zinc-900 tracking-tight mb-1 flex items-center gap-2">
                         Projects
                         {isPro && (
-                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-blue-900 text-white rounded-full">
+                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
                                 {proProduct?.status === "trialing" ? "Pro Trial" : "Pro"}
                             </span>
                         )}
