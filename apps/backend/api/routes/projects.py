@@ -384,28 +384,60 @@ async def get_org_usage_endpoint(
         current_compute = float(comp.get("usage", 0.0) or 0.0)
         included_compute = float(comp.get("included_usage", 0.0) or 0.0)
 
-    # Extract billing period from Autumn product (epoch ms → ISO string)
+    # Extract billing period dates from the Autumn product.
+    # Pick the most relevant product: prefer non-default (Pro) over default (Hobby).
+    # For trials, use started_at as period start (trial is shorter than a month).
+    # For active subscriptions, use current_period_start/end directly.
     period_start = None
     period_end = None
+
     products = customer.get("products") or []
-    for product in products:
-        ps = product.get("current_period_start")
+    # Sort: non-default products first (Pro before Hobby)
+    products_sorted = sorted(products, key=lambda p: p.get("is_default", False))
+
+    for product in products_sorted:
         pe = product.get("current_period_end")
-        if ps and pe:
-            period_start = datetime.utcfromtimestamp(ps / 1000).isoformat()
-            period_end = datetime.utcfromtimestamp(pe / 1000).isoformat()
+        if not pe:
+            continue
+
+        status = product.get("status", "")
+        period_end = datetime.utcfromtimestamp(pe / 1000).isoformat()
+
+        if status == "trialing":
+            # Trial: period starts when the trial began, not a full month before
+            started = product.get("started_at")
+            if started:
+                period_start = datetime.utcfromtimestamp(started / 1000).isoformat()
+            else:
+                ps = product.get("current_period_start")
+                if ps:
+                    period_start = datetime.utcfromtimestamp(ps / 1000).isoformat()
+        else:
+            # Active/regular: use the subscription's actual period start
+            ps = product.get("current_period_start")
+            if ps:
+                period_start = datetime.utcfromtimestamp(ps / 1000).isoformat()
+
+        if period_start and period_end:
             break
 
-    # Fallback: use next_reset_at from a feature if no product period found
-    if not period_start or not period_end:
+    # Last-resort fallback: use next_reset_at from features
+    if not period_end:
         for feat in (inv, comp):
             next_reset = feat.get("next_reset_at")
             if next_reset:
                 reset_dt = datetime.utcfromtimestamp(next_reset / 1000)
                 period_end = reset_dt.isoformat()
-                # Approximate period start as 30 days before reset
-                from datetime import timedelta
-                period_start = (reset_dt - timedelta(days=30)).isoformat()
+                # Without product data, approximate start as 1 month before reset
+                if not period_start:
+                    if reset_dt.month == 1:
+                        start_dt = reset_dt.replace(year=reset_dt.year - 1, month=12)
+                    else:
+                        import calendar
+                        prev_month = reset_dt.month - 1
+                        max_day = calendar.monthrange(reset_dt.year, prev_month)[1]
+                        start_dt = reset_dt.replace(month=prev_month, day=min(reset_dt.day, max_day))
+                    period_start = start_dt.isoformat()
                 break
 
     last_updated = datetime.utcnow().isoformat()
