@@ -64,7 +64,6 @@ def _autumn_track_usage(
     customer_id: str,
     feature_id: str,
     value: float,
-    idempotency_key: str,
 ) -> None:
     """
     Record usage into Autumn using the documented /track endpoint.
@@ -80,7 +79,6 @@ def _autumn_track_usage(
         "customer_id": customer_id,
         "feature_id": feature_id,
         "value": value,
-        "idempotency_key": idempotency_key,
     }
 
     try:
@@ -90,7 +88,10 @@ def _autumn_track_usage(
             json=payload,
             timeout=15.0,
         )
-        if resp.status_code >= 400:
+        if resp.status_code == 409:
+            # Duplicate idempotency key / already recorded – safe to ignore.
+            print(f"ℹ️ Autumn already has usage for org={customer_id} feature={feature_id}")
+        elif resp.status_code >= 400:
             print(f"⚠️ Autumn track failed ({resp.status_code}): {resp.text}")
         else:
             print(f"💸 Autumn synced: org={customer_id} feature={feature_id} value={value}")
@@ -305,20 +306,19 @@ def aggregate_usage_metrics():
                 print(f"❌ Failed to update usage for org {org_id}: {e}")
 
             # Sync to Autumn (feature IDs must match the dashboard)
-            # Important: send *deltas* for this window. Idempotency prevents double-counting on retries.
+            # We deliberately don't send an idempotency_key so that manual re-runs
+            # in the same window still count as additional usage for testing.
             if org_requests > 0:
                 _autumn_track_usage(
                     customer_id=org_id,
                     feature_id="invocations",
                     value=float(org_requests),
-                    idempotency_key=f"agg:{org_id}:{window_key}:invocations",
                 )
             if org_gb_seconds > 0:
                 _autumn_track_usage(
                     customer_id=org_id,
                     feature_id="compute",
                     value=float(org_gb_seconds),
-                    idempotency_key=f"agg:{org_id}:{window_key}:compute",
                 )
     
     print(f"🎉 Aggregation complete!")
