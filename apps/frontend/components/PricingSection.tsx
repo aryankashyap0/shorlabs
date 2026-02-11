@@ -38,7 +38,7 @@ const PricingSection = () => {
                             className="w-full min-w-0"
                             renderBadge={() =>
                                 plan.highlighted ? (
-                                    <Badge className="rounded-full bg-gradient-to-r from-violet-500 to-blue-500 px-2 py-0.5 text-[10px] font-medium text-white">
+                                    <Badge className="rounded-full bg-gradient-to-r from-violet-500 to-blue-500 px-2 py-0.5 text-xs font-medium text-white">
                                         14 day free trial
                                     </Badge>
                                 ) : null

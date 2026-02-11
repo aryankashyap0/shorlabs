@@ -65,14 +65,14 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
         <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <SheetContent
                 side="right"
-                className="w-full gap-0 border-l border-zinc-200 bg-zinc-50 p-0 sm:w-[560px] sm:max-w-[560px]"
+                className="w-full gap-0 border-l border-zinc-200 bg-zinc-50 p-0 md:!w-1/2 md:!max-w-none"
             >
                 <div className="h-full overflow-y-auto px-5 py-8 sm:px-6 sm:py-8">
                     <SheetHeader className="space-y-3 p-0 text-center">
                         <SheetTitle className="text-xl font-semibold tracking-tight text-zinc-900 sm:text-2xl">
                             Upgrade your plan
                         </SheetTitle>
-                        <SheetDescription className="text-xs text-zinc-500">
+                        <SheetDescription className="text-sm text-zinc-500">
                             Start free, scale as you grow. No surprises.
                         </SheetDescription>
 
@@ -80,7 +80,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                             <Button
                                 type="button"
                                 size="sm"
-                                className="h-7 rounded-full bg-white px-3 text-xs text-zinc-900 shadow-xs hover:bg-white"
+                                className="h-8 rounded-full bg-white px-3 text-sm text-zinc-900 shadow-xs hover:bg-white"
                             >
                                 Business
                             </Button>
@@ -113,21 +113,21 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                                     renderBadge={() => {
                                         if (isCurrent && isPro && isDowngradeScheduled) {
                                             return (
-                                                <Badge className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                                                <Badge className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
                                                     Cancels at period end
                                                 </Badge>
                                             )
                                         }
                                         if (isCurrent) {
                                             return (
-                                                <Badge className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-600">
+                                                <Badge className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
                                                     Current
                                                 </Badge>
                                             )
                                         }
                                         if (plan.highlighted) {
                                             return (
-                                                <Badge className="rounded-full bg-gradient-to-r from-violet-500 to-blue-500 px-2 py-0.5 text-[10px] font-medium text-white">
+                                                <Badge className="rounded-full bg-gradient-to-r from-violet-500 to-blue-500 px-2 py-0.5 text-xs font-medium text-white">
                                                     14 day free trial
                                                 </Badge>
                                             )
@@ -141,14 +141,14 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                                             disabled={isCurrent || isLoading || !isLoaded || (!isPro && isDowngradeScheduled)}
                                             variant={isPro && !isCurrent ? "default" : "outline"}
                                             className={cn(
-                                                "h-9 w-full rounded-full text-xs font-medium",
+                                                "h-10 w-full rounded-full text-sm font-medium",
                                                 isPro && !isCurrent && "bg-zinc-900 text-white hover:bg-zinc-800",
                                                 (isCurrent || (!isPro && isDowngradeScheduled)) && "border-zinc-200 bg-zinc-100 text-zinc-500 hover:bg-zinc-100",
                                                 !isPro && !isCurrent && !isDowngradeScheduled && "border-zinc-200 text-zinc-700 hover:bg-zinc-50",
                                             )}
                                         >
                                             {isLoading ? (
-                                                <Loader2 className="size-3.5 animate-spin" />
+                                                <Loader2 className="size-4 animate-spin" />
                                             ) : (
                                                 buttonText
                                             )}
@@ -160,7 +160,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                     </div>
 
                     {actionError && (
-                        <p className="mt-4 text-center text-xs text-red-600" role="alert">
+                        <p className="mt-4 text-center text-sm text-red-600" role="alert">
                             {actionError}
                         </p>
                     )}

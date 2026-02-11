@@ -23,20 +23,20 @@ export function PricingCard({ plan, renderBadge, renderAction, highlighted, clas
         >
             <CardHeader className="space-y-3 px-4 pb-2">
                 <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="text-lg font-semibold tracking-tight text-zinc-900">
+                    <CardTitle className="text-xl font-semibold tracking-tight text-zinc-900">
                         {plan.name}
                     </CardTitle>
                     {renderBadge?.(plan)}
                 </div>
 
                 <div className="flex items-end gap-1">
-                    <span className="text-2xl font-semibold leading-none text-zinc-900 sm:text-3xl">
+                    <span className="text-3xl font-semibold leading-none text-zinc-900 sm:text-4xl">
                         {plan.price}
                     </span>
-                    <span className="pb-0.5 text-xs text-zinc-500">{plan.period}</span>
+                    <span className="pb-0.5 text-sm text-zinc-500">{plan.period}</span>
                 </div>
 
-                <CardDescription className="text-xs leading-relaxed text-zinc-600">
+                <CardDescription className="text-sm leading-relaxed text-zinc-600">
                     {plan.description}
                 </CardDescription>
             </CardHeader>
@@ -50,9 +50,9 @@ export function PricingCard({ plan, renderBadge, renderAction, highlighted, clas
                         return (
                             <li
                                 key={feature.label}
-                                className="flex items-center gap-2 text-xs text-zinc-600"
+                                className="flex items-center gap-2 text-sm text-zinc-600"
                             >
-                                <Icon className="size-3.5 shrink-0 text-zinc-400" strokeWidth={2} />
+                                <Icon className="size-4 shrink-0 text-zinc-400" strokeWidth={2} />
                                 {feature.label}
                             </li>
                         )
