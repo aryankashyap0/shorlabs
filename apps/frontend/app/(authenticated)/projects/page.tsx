@@ -230,7 +230,7 @@ export default function ProjectsPage() {
                                             <div className="flex items-center justify-between mb-2">
                                                 <div className="flex items-center gap-2">
                                                     <span className="w-2 h-2 rounded-full bg-zinc-900" />
-                                                    <span className="text-sm text-zinc-600">Compute (GB-Seconds)</span>
+                                                    <span className="text-sm text-zinc-600">Compute</span>
                                                 </div>
                                                 <span className="text-sm font-mono text-zinc-500">
                                                     {formatNumber(usage?.gbSeconds.current || 0)} / {formatNumber(usage?.gbSeconds.limit || 0)}
