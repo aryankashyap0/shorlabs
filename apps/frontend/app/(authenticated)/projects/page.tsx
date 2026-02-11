@@ -180,8 +180,14 @@ export default function ProjectsPage() {
                                 <CardTitle className="text-sm font-semibold text-zinc-900">
                                     Usage
                                 </CardTitle>
-                                <CardDescription className="text-xs text-zinc-500">
-                                    {usage?.period || "Current period"}
+                                <CardDescription className="flex items-center justify-between text-xs text-zinc-500">
+                                    <span>{usage?.period || "Current period"}</span>
+                                    {(usageLoading || isValidating) && (
+                                        <span className="ml-2 inline-flex items-center gap-1 text-[10px] text-sky-700">
+                                            <span className="h-1 w-1 rounded-full bg-sky-600 animate-pulse" />
+                                            Refreshing
+                                        </span>
+                                    )}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="px-5 pb-4 pt-0">
