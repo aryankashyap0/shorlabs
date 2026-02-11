@@ -28,13 +28,14 @@ const PricingSection = () => {
             </div>
 
             {/* Pricing Cards - info only, no buttons (homepage users are typically not logged in) */}
-            <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="mx-auto w-full max-w-2xl px-4 sm:px-6 pb-16 sm:pb-24">
+                <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2">
                     {PLANS.map((plan) => (
                         <PricingCard
                             key={plan.id}
                             plan={plan}
                             highlighted={plan.highlighted}
+                            className="w-full min-w-0"
                             renderBadge={() =>
                                 plan.highlighted ? (
                                     <Badge className="rounded-full bg-gradient-to-r from-violet-500 to-blue-500 px-2 py-0.5 text-[10px] font-medium text-white">
