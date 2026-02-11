@@ -14,7 +14,8 @@ interface Usage {
         current: number
         limit: number
     }
-    period: string
+    periodStart: string | null
+    periodEnd: string | null
     lastUpdated: string
 }
 

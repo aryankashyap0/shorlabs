@@ -23,7 +23,6 @@ from api.db.dynamodb import (
     create_deployment,
     list_deployments,
     update_deployment,
-    get_current_period,
 )
 
 # Import from deployer package
@@ -354,9 +353,8 @@ async def get_org_usage_endpoint(
     This aligns with industry standards (Vercel, AWS, etc.) where organizations pay for usage.
     
     Source of truth: Autumn (features: invocations, compute)
+    Period dates come from the Autumn product's current_period_start/end.
     """
-    period = get_current_period()
-
     customer = _fetch_autumn_customer(org_id)
     features = customer.get("features") or {}
 
@@ -386,6 +384,30 @@ async def get_org_usage_endpoint(
         current_compute = float(comp.get("usage", 0.0) or 0.0)
         included_compute = float(comp.get("included_usage", 0.0) or 0.0)
 
+    # Extract billing period from Autumn product (epoch ms → ISO string)
+    period_start = None
+    period_end = None
+    products = customer.get("products") or []
+    for product in products:
+        ps = product.get("current_period_start")
+        pe = product.get("current_period_end")
+        if ps and pe:
+            period_start = datetime.utcfromtimestamp(ps / 1000).isoformat()
+            period_end = datetime.utcfromtimestamp(pe / 1000).isoformat()
+            break
+
+    # Fallback: use next_reset_at from a feature if no product period found
+    if not period_start or not period_end:
+        for feat in (inv, comp):
+            next_reset = feat.get("next_reset_at")
+            if next_reset:
+                reset_dt = datetime.utcfromtimestamp(next_reset / 1000)
+                period_end = reset_dt.isoformat()
+                # Approximate period start as 30 days before reset
+                from datetime import timedelta
+                period_start = (reset_dt - timedelta(days=30)).isoformat()
+                break
+
     last_updated = datetime.utcnow().isoformat()
     
     return {
@@ -397,7 +419,8 @@ async def get_org_usage_endpoint(
             "current": round(current_compute, 2),
             "limit": included_compute,
         },
-        "period": period,
+        "periodStart": period_start,
+        "periodEnd": period_end,
         "lastUpdated": last_updated,
     }
 
