@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AlertCircle, ChevronDown, ChevronUp } from "lucide-react"
 import { useUsage } from "@/hooks/use-usage"
 import { useIsPro } from "@/hooks/use-is-pro"
@@ -23,8 +23,15 @@ export function UsagePanel({ onUpgrade }: UsagePanelProps) {
     const { usage, loading: usageLoading, error: usageError, isValidating } = useUsage()
     const { isPro, proProduct } = useIsPro()
     const [breakdownOpen, setBreakdownOpen] = useState(false)
+    const [mounted, setMounted] = useState(false)
 
-    const hasCredits = usage?.credits != null
+    useEffect(() => { setMounted(true) }, [])
+
+    // Don't render anything meaningful until mounted (prevents hydration mismatch)
+    // and until we have data (prevents showing wrong layout)
+    const dataReady = mounted && !usageLoading && usage != null
+    const hasCredits = dataReady && usage.credits != null
+    const showLoading = !mounted || usageLoading || (isValidating && !usage)
 
     return (
         <div className="w-full lg:w-80 lg:shrink-0">
@@ -34,19 +41,19 @@ export function UsagePanel({ onUpgrade }: UsagePanelProps) {
                     <div>
                         <h3 className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
                             Usage
-                            {proProduct?.status === "trialing" && (
+                            {mounted && proProduct?.status === "trialing" && (
                                 <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-700 rounded-full">
                                     Trial
                                 </span>
                             )}
                         </h3>
                         <p className="text-xs text-zinc-400 mt-0.5">
-                            {usage?.periodStart && usage?.periodEnd
+                            {dataReady && usage.periodStart && usage.periodEnd
                                 ? `${new Date(usage.periodStart).toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${new Date(usage.periodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
                                 : "Current period"}
                         </p>
                     </div>
-                    {(usageLoading || isValidating) && (
+                    {mounted && (usageLoading || isValidating) && (
                         <span className="inline-flex items-center gap-1.5 text-[11px] text-zinc-400">
                             <span className="h-1.5 w-1.5 rounded-full bg-zinc-300 animate-pulse" />
                             Syncing
@@ -56,24 +63,19 @@ export function UsagePanel({ onUpgrade }: UsagePanelProps) {
 
                 {/* Body */}
                 <div className="px-5 pt-4 pb-5">
-                    {(usageLoading || (isValidating && !usage)) ? (
+                    {showLoading ? (
+                        /* ── Loading skeleton ──────────────────────── */
                         <div className="space-y-5 animate-pulse">
                             <div className="space-y-2.5">
                                 <div className="flex justify-between">
                                     <div className="h-3 bg-zinc-100 rounded w-24" />
                                     <div className="h-3 bg-zinc-100 rounded w-16" />
                                 </div>
-                                <div className="h-2 bg-zinc-100 rounded-full" />
-                            </div>
-                            <div className="space-y-2.5">
-                                <div className="flex justify-between">
-                                    <div className="h-3 bg-zinc-100 rounded w-20" />
-                                    <div className="h-3 bg-zinc-100 rounded w-16" />
-                                </div>
-                                <div className="h-2 bg-zinc-100 rounded-full" />
+                                <div className="h-2.5 bg-zinc-100 rounded-full" />
                             </div>
                         </div>
                     ) : usageError && !usage ? (
+                        /* ── Error state ───────────────────────────── */
                         <div className="py-6 text-center">
                             <AlertCircle className="h-5 w-5 text-red-400 mx-auto mb-2" />
                             <p className="text-sm text-zinc-600">Failed to load usage</p>
@@ -82,14 +84,12 @@ export function UsagePanel({ onUpgrade }: UsagePanelProps) {
                     ) : hasCredits ? (
                         /* ── Pro: Credit-based display ─────────────── */
                         <div className="space-y-4">
-                            {/* Labels */}
-                            <div className="flex items-baseline justify-between">
-                                <span className="text-[13px] text-zinc-600">Included Credit</span>
-                                <span className="text-[13px] text-zinc-400">On-Demand Charges</span>
-                            </div>
-
                             {/* Dollar amount + progress bar */}
                             <div>
+                                <div className="flex items-baseline justify-between mb-1">
+                                    <span className="text-[13px] text-zinc-500">Included Credit</span>
+                                    <span className="text-[13px] text-zinc-500">Overage</span>
+                                </div>
                                 <div className="flex items-baseline justify-between mb-2">
                                     <span className="text-lg font-semibold tabular-nums text-zinc-900">
                                         {formatDollars(usage!.credits!.used)}
@@ -97,7 +97,7 @@ export function UsagePanel({ onUpgrade }: UsagePanelProps) {
                                             {" "}/ {formatDollars(usage!.credits!.included)}
                                         </span>
                                     </span>
-                                    <span className="text-[13px] tabular-nums text-zinc-500">
+                                    <span className="text-sm tabular-nums font-medium text-zinc-900">
                                         {usage!.credits!.used > usage!.credits!.included
                                             ? formatDollars(usage!.credits!.used - usage!.credits!.included)
                                             : "—"}
@@ -120,7 +120,7 @@ export function UsagePanel({ onUpgrade }: UsagePanelProps) {
                             </div>
 
                             {/* Expandable breakdown */}
-                            {usage?.breakdown && usage.breakdown.length > 0 && (
+                            {usage!.breakdown && usage!.breakdown.length > 0 && (
                                 <div>
                                     <button
                                         onClick={() => setBreakdownOpen(!breakdownOpen)}
@@ -136,7 +136,7 @@ export function UsagePanel({ onUpgrade }: UsagePanelProps) {
 
                                     {breakdownOpen && (
                                         <div className="mt-2 space-y-2 pl-1">
-                                            {usage.breakdown.map((item) => (
+                                            {usage!.breakdown!.map((item) => (
                                                 <div
                                                     key={item.featureId}
                                                     className="flex items-center justify-between"
@@ -157,7 +157,7 @@ export function UsagePanel({ onUpgrade }: UsagePanelProps) {
                                 </div>
                             )}
                         </div>
-                    ) : (
+                    ) : dataReady ? (
                         /* ── Hobby: Raw count display ──────────────── */
                         <div className="space-y-5">
                             {/* Included Requests */}
@@ -165,8 +165,8 @@ export function UsagePanel({ onUpgrade }: UsagePanelProps) {
                                 <div className="flex items-baseline justify-between mb-2">
                                     <span className="text-[13px] text-zinc-600">Included Requests</span>
                                     <span className="text-[13px] tabular-nums text-zinc-900">
-                                        {formatNumber(usage?.requests.current || 0)}
-                                        <span className="text-zinc-400"> / {formatNumber(usage?.requests.limit || 0)}</span>
+                                        {formatNumber(usage!.requests.current || 0)}
+                                        <span className="text-zinc-400"> / {formatNumber(usage!.requests.limit || 0)}</span>
                                     </span>
                                 </div>
                                 <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
@@ -174,8 +174,8 @@ export function UsagePanel({ onUpgrade }: UsagePanelProps) {
                                         className="h-full rounded-full bg-blue-600 transition-all duration-500 ease-out"
                                         style={{
                                             width: `${Math.min(
-                                                ((usage?.requests.current || 0) /
-                                                    (usage?.requests.limit || 1)) *
+                                                ((usage!.requests.current || 0) /
+                                                    (usage!.requests.limit || 1)) *
                                                 100,
                                                 100
                                             )}%`,
@@ -189,8 +189,8 @@ export function UsagePanel({ onUpgrade }: UsagePanelProps) {
                                 <div className="flex items-baseline justify-between mb-2">
                                     <span className="text-[13px] text-zinc-600">Included Compute</span>
                                     <span className="text-[13px] tabular-nums text-zinc-900">
-                                        {formatNumber(usage?.gbSeconds.current || 0)}
-                                        <span className="text-zinc-400"> / {formatNumber(usage?.gbSeconds.limit || 0)}</span>
+                                        {formatNumber(usage!.gbSeconds.current || 0)}
+                                        <span className="text-zinc-400"> / {formatNumber(usage!.gbSeconds.limit || 0)}</span>
                                     </span>
                                 </div>
                                 <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
@@ -198,8 +198,8 @@ export function UsagePanel({ onUpgrade }: UsagePanelProps) {
                                         className="h-full rounded-full bg-blue-600 transition-all duration-500 ease-out"
                                         style={{
                                             width: `${Math.min(
-                                                ((usage?.gbSeconds.current || 0) /
-                                                    (usage?.gbSeconds.limit || 1)) *
+                                                ((usage!.gbSeconds.current || 0) /
+                                                    (usage!.gbSeconds.limit || 1)) *
                                                 100,
                                                 100
                                             )}%`,
@@ -208,11 +208,11 @@ export function UsagePanel({ onUpgrade }: UsagePanelProps) {
                                 </div>
                             </div>
                         </div>
-                    )}
+                    ) : null}
                 </div>
 
                 {/* Footer — only show upgrade CTA for non-pro users */}
-                {!isPro && (
+                {mounted && !isPro && (
                     <div className="border-t border-zinc-100 px-5 py-3">
                         <button
                             onClick={onUpgrade}

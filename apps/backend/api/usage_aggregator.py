@@ -1,12 +1,12 @@
 """
-Usage Metrics Aggregator - Scheduled service for CloudWatch → DynamoDB
+Usage Metrics Aggregator - Scheduled service for CloudWatch → Autumn
 
 This service runs hourly via EventBridge to:
 1. Fetch CloudWatch metrics for all Lambda functions
 2. Calculate incremental usage (requests + GB-Seconds)
-3. Store aggregated data in DynamoDB
+3. Sync usage to Autumn (billing provider)
 
-Industry-standard approach ensures usage persists even after function deletion.
+Autumn is the sole source of truth for usage and billing.
 """
 import os
 from datetime import datetime, timedelta
@@ -18,8 +18,6 @@ from boto3.dynamodb.conditions import Key
 
 from api.db.dynamodb import (
     get_or_create_table,
-    get_current_period,
-    increment_org_usage,
 )
 from deployer import extract_project_name
 from deployer.aws.lambda_service import get_lambda_function_name
@@ -218,7 +216,7 @@ def aggregate_usage_metrics():
     """
     Main aggregation function - called by EventBridge hourly.
     
-    Fetches CloudWatch metrics for all projects and stores in DynamoDB.
+    Fetches CloudWatch metrics for all projects and syncs to Autumn.
     """
     print(f"🔄 Starting usage metrics aggregation at {datetime.utcnow().isoformat()}")
     
@@ -242,8 +240,8 @@ def aggregate_usage_metrics():
     
     print(f"🏢 Aggregating for {len(orgs_projects)} organizations")
     
-    # Get current billing period
-    period = get_current_period()
+    # Period label for logging only
+    period = datetime.utcnow().strftime("%Y-%m")
     window_seconds = _get_aggregation_window_seconds()
     window_end = _window_bucket_end(datetime.utcnow(), window_seconds)
     window_key = window_end.strftime("%Y%m%dT%H%M%SZ")
@@ -290,20 +288,10 @@ def aggregate_usage_metrics():
                 print(f"  ❌ Error aggregating {function_name}: {e}")
                 continue
         
-        # Update organization's usage in DynamoDB if there's any activity
+        # Sync usage to Autumn (sole source of truth for billing)
         if org_requests > 0 or org_gb_seconds > 0:
-            try:
-                increment_org_usage(
-                    org_id=org_id,
-                    period=period,
-                    requests=org_requests,
-                    gb_seconds=org_gb_seconds,
-                )
-                print(f"✅ Updated usage for org {org_id}: +{org_requests} requests, +{org_gb_seconds:.2f} GB-s")
-                total_requests += org_requests
-                total_gb_seconds += org_gb_seconds
-            except Exception as e:
-                print(f"❌ Failed to update usage for org {org_id}: {e}")
+            total_requests += org_requests
+            total_gb_seconds += org_gb_seconds
 
             # Sync to Autumn (feature IDs must match the dashboard)
             # We deliberately don't send an idempotency_key so that manual re-runs
