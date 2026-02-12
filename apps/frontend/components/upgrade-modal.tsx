@@ -29,8 +29,8 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
         setLoadingPlan(productId)
         try {
             // Downgrade: cancel the current paid product (reverts to free tier at period end)
-            if (productId === "hobby" && currentProductId === "pro") {
-                const result = await cancel({ productId: "pro" })
+            if (productId === "hobby" && currentProductId && currentProductId !== "hobby") {
+                const result = await cancel({ productId: currentProductId })
                 if (result.error) {
                     setActionError(result.error.message || "Failed to downgrade plan. Please try again.")
                     return
@@ -65,7 +65,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
         <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <SheetContent
                 side="right"
-                className="w-full gap-0 border-l border-zinc-200 bg-zinc-50 p-0 md:!w-1/2 md:!max-w-none"
+                className="w-full gap-0 border-l border-zinc-200 bg-zinc-50 p-0 md:!w-full md:!max-w-none"
             >
                 <div className="h-full overflow-y-auto px-5 py-8 sm:px-6 sm:py-8">
                     <SheetHeader className="space-y-3 p-0 text-center">
@@ -87,22 +87,25 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                         </div>
                     </SheetHeader>
 
-                    <div className="mx-auto mt-6 grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="mx-auto mt-6 grid w-full max-w-4xl grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
                         {PLANS.map((plan) => {
                             const isCurrent = plan.id === currentProductId
                             const isLoading = loadingPlan === plan.id
                             const isPro = plan.id === "pro"
+                            const isFree = plan.id === "hobby"
 
                             // Determine button text based on plan state
                             let buttonText: string
                             if (isCurrent) {
                                 buttonText = "Current plan"
-                            } else if (isPro) {
-                                buttonText = "Upgrade to Pro"
-                            } else if (isDowngradeScheduled) {
-                                buttonText = "Switching at period end"
+                            } else if (isFree) {
+                                if (isDowngradeScheduled) {
+                                    buttonText = "Switching at period end"
+                                } else {
+                                    buttonText = "Switch to Hobby"
+                                }
                             } else {
-                                buttonText = "Switch to Hobby"
+                                buttonText = `Upgrade to ${plan.name}`
                             }
 
                             return (
@@ -125,7 +128,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                                                 </Badge>
                                             )
                                         }
-                                        if (plan.highlighted) {
+                                        if (plan.id === "pro" || plan.id === "plus") {
                                             return (
                                                 <Badge className="rounded-full bg-gradient-to-r from-violet-500 to-blue-500 px-2 py-0.5 text-xs font-medium text-white">
                                                     14 day free trial
@@ -138,7 +141,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                                         <Button
                                             type="button"
                                             onClick={() => handleSelectPlan(plan.id)}
-                                            disabled={isCurrent || isLoading || !isLoaded || (!isPro && isDowngradeScheduled)}
+                                            disabled={isCurrent || isLoading || !isLoaded || (isFree && isDowngradeScheduled)}
                                             variant={isPro && !isCurrent ? "default" : "outline"}
                                             className={cn(
                                                 "h-10 w-full rounded-full text-sm font-medium",

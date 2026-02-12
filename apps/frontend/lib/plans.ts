@@ -15,6 +15,11 @@ export interface Plan {
     features: PlanFeature[]
 }
 
+export const USAGE_PRICING = {
+    requests: "$0.60 / 1M Requests",
+    compute: "$0.035 / 1K Compute (GB-s)",
+} as const
+
 export const PLANS: Plan[] = [
     {
         id: "hobby",
@@ -32,6 +37,22 @@ export const PLANS: Plan[] = [
         ],
     },
     {
+        id: "plus",
+        name: "Plus",
+        description: "Great for growing projects that need more scale.",
+        price: "$5",
+        period: "/ month",
+        features: [
+            { label: "Unlimited Projects", icon: FolderOpen },
+            { label: "$5 Included Usage/Month", icon: DollarSign },
+            { label: USAGE_PRICING.requests, icon: Globe },
+            { label: USAGE_PRICING.compute, icon: Zap },
+            { label: "Up to 2 GB Memory", icon: Cpu },
+            { label: "Up to 60s Timeout", icon: Clock },
+            { label: "Up to 1 GB Temp Disk", icon: HardDrive },
+        ],
+    },
+    {
         id: "pro",
         name: "Pro",
         description: "Built for production workloads and commercial applications.",
@@ -41,8 +62,8 @@ export const PLANS: Plan[] = [
         features: [
             { label: "Unlimited Projects", icon: FolderOpen },
             { label: "$20 Included Usage/Month", icon: DollarSign },
-            { label: "$0.60 / 1M Requests", icon: Globe },
-            { label: "$0.035 / 1K Compute (GB-s)", icon: Zap },
+            { label: USAGE_PRICING.requests, icon: Globe },
+            { label: USAGE_PRICING.compute, icon: Zap },
             { label: "Up to 4 GB Memory", icon: Cpu },
             { label: "Up to 300s Timeout", icon: Clock },
             { label: "Up to 2 GB Temp Disk", icon: HardDrive },
