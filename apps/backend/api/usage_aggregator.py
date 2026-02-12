@@ -10,7 +10,7 @@ Autumn is the sole source of truth for usage and billing.
 """
 import os
 from datetime import datetime, timedelta
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import boto3
 import httpx
@@ -62,6 +62,7 @@ def _autumn_track_usage(
     customer_id: str,
     feature_id: str,
     value: float,
+    idempotency_key: Optional[str] = None,
 ) -> None:
     """
     Record usage into Autumn using the documented /track endpoint.
@@ -78,6 +79,9 @@ def _autumn_track_usage(
         "feature_id": feature_id,
         "value": value,
     }
+    if idempotency_key:
+        # Use Autumn's idempotency key to avoid double-counting the same window.
+        payload["idempotency_key"] = idempotency_key
 
     try:
         resp = httpx.post(
@@ -146,9 +150,16 @@ def get_cloudwatch_metric_sum(
         return 0.0
 
 
-def get_invocations(function_name: str, *, window_seconds: int) -> int:
+def get_invocations(
+    function_name: str,
+    *,
+    window_seconds: int,
+    window_end: datetime,
+) -> int:
     """Get number of invocations in the aggregation window."""
-    end_time = datetime.utcnow()
+    # Use the deterministic window_end passed from the aggregator so repeated
+    # runs for the same bucket look at exactly the same CloudWatch range.
+    end_time = window_end
     start_time = end_time - timedelta(seconds=window_seconds)
     
     invocations = get_cloudwatch_metric_sum(
@@ -161,7 +172,13 @@ def get_invocations(function_name: str, *, window_seconds: int) -> int:
     return int(invocations)
 
 
-def get_gb_seconds(function_name: str, memory_mb: int, *, window_seconds: int) -> float:
+def get_gb_seconds(
+    function_name: str,
+    memory_mb: int,
+    *,
+    window_seconds: int,
+    window_end: datetime,
+) -> float:
     """
     Calculate GB-Seconds for a function in the aggregation window.
     
@@ -170,7 +187,9 @@ def get_gb_seconds(function_name: str, memory_mb: int, *, window_seconds: int) -
     Note: CloudWatch Duration is in milliseconds, Memory is in MB.
     We convert to GB-Seconds for billing calculations.
     """
-    end_time = datetime.utcnow()
+    # Use the deterministic window_end passed from the aggregator so repeated
+    # runs for the same bucket look at exactly the same CloudWatch range.
+    end_time = window_end
     start_time = end_time - timedelta(seconds=window_seconds)
     
     # Get total duration in milliseconds
@@ -276,8 +295,17 @@ def aggregate_usage_metrics():
             
             # Fetch metrics from CloudWatch
             try:
-                invocations = get_invocations(function_name, window_seconds=window_seconds)
-                gb_seconds = get_gb_seconds(function_name, memory_mb, window_seconds=window_seconds)
+                invocations = get_invocations(
+                    function_name,
+                    window_seconds=window_seconds,
+                    window_end=window_end,
+                )
+                gb_seconds = get_gb_seconds(
+                    function_name,
+                    memory_mb,
+                    window_seconds=window_seconds,
+                    window_end=window_end,
+                )
                 
                 if invocations > 0 or gb_seconds > 0:
                     print(f"  📈 {function_name}: {invocations} invocations, {gb_seconds:.2f} GB-s")
@@ -293,20 +321,22 @@ def aggregate_usage_metrics():
             total_requests += org_requests
             total_gb_seconds += org_gb_seconds
 
-            # Sync to Autumn (feature IDs must match the dashboard)
-            # We deliberately don't send an idempotency_key so that manual re-runs
-            # in the same window still count as additional usage for testing.
+            # Sync to Autumn (feature IDs must match the dashboard) using an
+            # idempotency key per org/feature/window so repeated runs don't
+            # double-count usage for the same bucket.
             if org_requests > 0:
                 _autumn_track_usage(
                     customer_id=org_id,
                     feature_id="invocations",
                     value=float(org_requests),
+                    idempotency_key=f"{org_id}:invocations:{window_key}",
                 )
             if org_gb_seconds > 0:
                 _autumn_track_usage(
                     customer_id=org_id,
                     feature_id="compute",
                     value=float(org_gb_seconds),
+                    idempotency_key=f"{org_id}:compute:{window_key}",
                 )
     
     print(f"🎉 Aggregation complete!")
