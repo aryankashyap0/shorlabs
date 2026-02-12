@@ -23,7 +23,7 @@ export const PLANS: Plan[] = [
         price: "$0",
         period: "/ month",
         features: [
-            { label: "Unlimited Projects", icon: FolderOpen },
+            { label: "1 Project", icon: FolderOpen },
             { label: "5K Requests/Month", icon: Globe },
             { label: "2.5K Compute (GB-s)/Month", icon: Zap },
             { label: "1 GB Memory", icon: Cpu },
