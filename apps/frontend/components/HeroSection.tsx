@@ -6,7 +6,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
-import { GitHubButton } from "@/components/GitHubButton";
 
 const HeroSection = () => {
     const { isLoaded, isSignedIn } = useAuth();
@@ -16,8 +15,15 @@ const HeroSection = () => {
             {/* Hero Content */}
             <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28 lg:pt-32 pb-10 sm:pb-14 lg:pb-16">
                 <div className="flex flex-col items-center sm:items-start text-center sm:text-left space-y-5 sm:space-y-6">
-                    {/* View on GitHub */}
-                    <GitHubButton className="inline-flex" />
+                    {/* View on GitHub badge */}
+                    <a
+                        href="https://github.com/aryankashyap0/shorlabs"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-xs font-medium text-gray-600 hover:text-gray-900 hover:border-gray-200 hover:bg-gray-100 transition-colors"
+                    >
+                        View on GitHub
+                    </a>
 
                     {/* Headline */}
                     <h1 className="text-3xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-gray-900 leading-[1.15] tracking-tight max-w-2xl">
