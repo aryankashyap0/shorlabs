@@ -16,12 +16,8 @@ const HeroSection = () => {
             {/* Hero Content */}
             <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28 lg:pt-32 pb-10 sm:pb-14 lg:pb-16">
                 <div className="flex flex-col items-center sm:items-start text-center sm:text-left space-y-5 sm:space-y-6">
-                    {/* Badge */}
-                    <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100">
-                        <span className="text-xs font-medium text-gray-600">
-                            100% Open Source
-                        </span>
-                    </div>
+                    {/* View on GitHub */}
+                    <GitHubButton className="inline-flex" />
 
                     {/* Headline */}
                     <h1 className="text-3xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-gray-900 leading-[1.15] tracking-tight max-w-2xl">
@@ -45,15 +41,20 @@ const HeroSection = () => {
                                 </Button>
                             </Link>
                         ) : (
-                            <Link href="/create-account" className="w-full sm:w-auto">
-                                <Button className="group w-full sm:w-auto text-sm bg-gray-900 text-white hover:bg-gray-800 px-6 h-10 rounded-full shadow-sm transition-all duration-200">
-                                    <span>Create Account</span>
-                                    <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-200 group-hover:translate-x-0.5" strokeWidth={1.5} />
-                                </Button>
-                            </Link>
+                            <>
+                                <Link href="/sign-in" className="w-full sm:w-auto">
+                                    <Button className="group w-full sm:w-auto text-sm bg-gray-900 text-white hover:bg-gray-800 px-6 h-10 rounded-full shadow-sm transition-all duration-200">
+                                        <span>Get started</span>
+                                        <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-200 group-hover:translate-x-0.5" strokeWidth={1.5} />
+                                    </Button>
+                                </Link>
+                                <GoogleSignInButton
+                                    source="hero"
+                                    text="Sign up with Google"
+                                    className="w-full sm:w-auto"
+                                />
+                            </>
                         )}
-
-                        <GitHubButton className="w-full sm:w-auto" />
                     </div>
 
                     {/* Trust Signal */}
