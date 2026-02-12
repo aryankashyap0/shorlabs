@@ -69,7 +69,7 @@ function ConfigureProjectContent() {
     const searchParams = useSearchParams()
     const { getToken, orgId } = useAuth()
     const { signOut } = useClerk()
-    const { isPro } = useIsPro()
+    const { isPro, currentPlan } = useIsPro()
     const { isOpen: upgradeOpen, openUpgradeModal, closeUpgradeModal } = useUpgradeModal()
 
     const repoFullName = searchParams.get("repo") || ""
@@ -614,7 +614,7 @@ function ConfigureProjectContent() {
                         onMemoryChange={setMemory}
                         onTimeoutChange={setTimeout}
                         onEphemeralStorageChange={setEphemeralStorage}
-                        isPro={isPro}
+                        plan={currentPlan ?? "hobby"}
                         onUpgradeClick={openUpgradeModal}
                     />
                 )}

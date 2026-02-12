@@ -120,7 +120,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     const [activeTab, setActiveTab] = useState<"deployments" | "logs" | "compute" | "settings">("deployments")
 
     // Pro tier check via Autumn
-    const { isPro } = useIsPro()
+    const { isPro, currentPlan } = useIsPro()
     const { isOpen: upgradeModalOpen, openUpgradeModal, closeUpgradeModal } = useUpgradeModal()
 
     // Env vars editing state
@@ -877,7 +877,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                         setEphemeralStorageValue(value)
                                     }
                                 }}
-                                isPro={isPro}
+                                plan={currentPlan ?? "hobby"}
                                 onUpgradeClick={openUpgradeModal}
                             />
 

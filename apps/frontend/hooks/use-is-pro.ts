@@ -18,24 +18,35 @@ const BILLABLE_STATUSES = new Set(["active", "trialing", "past_due", "scheduled"
 export function useIsPro() {
     const { customer, isLoading } = useCustomer()
 
+    const plusProduct = customer?.products?.find(
+        (product) => product.id === "plus" && BILLABLE_STATUSES.has(product.status)
+    )
     const proProduct = customer?.products?.find(
         (product) => product.id === "pro" && BILLABLE_STATUSES.has(product.status)
     )
 
     const hasCustomerData = !!customer
-    const isPro = hasCustomerData ? !!proProduct : false
+    // "isPro" is treated as "has any paid plan" (Plus or Pro)
+    const isPro = hasCustomerData ? !!(proProduct || plusProduct) : false
     const isCanceling = hasCustomerData
-        ? (!!proProduct && !!proProduct.canceled_at)
+        ? (!!(proProduct || plusProduct) && !!(proProduct || plusProduct)!.canceled_at)
         : false
-    const currentPlan: "pro" | "hobby" | undefined = hasCustomerData
-        ? (isPro ? "pro" : "hobby")
+    const currentPlan: "pro" | "plus" | "hobby" | undefined = hasCustomerData
+        ? (proProduct
+            ? "pro"
+            : plusProduct
+                ? "plus"
+                : "hobby")
         : undefined
+    const activeProduct = proProduct ?? plusProduct ?? null
 
     return {
         isPro,
         isCanceling,
         currentPlan,
         proProduct: proProduct ?? null,
+        plusProduct: plusProduct ?? null,
+        activeProduct,
         isLoaded: hasCustomerData,
         customer,
     }

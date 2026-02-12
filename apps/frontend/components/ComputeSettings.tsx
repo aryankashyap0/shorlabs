@@ -2,6 +2,8 @@
 
 import { Check, Cpu, Clock, HardDrive } from 'lucide-react'
 
+type PlanTier = "hobby" | "plus" | "pro"
+
 interface ComputeSettingsProps {
     memory: number
     timeout: number
@@ -9,21 +11,48 @@ interface ComputeSettingsProps {
     onMemoryChange: (value: number) => void
     onTimeoutChange: (value: number) => void
     onEphemeralStorageChange: (value: number) => void
-    isPro: boolean
+    plan: PlanTier
     onUpgradeClick: () => void
 }
 
-const memoryOptions = [
-    { value: 1024, label: "1 GB", description: "Standard" },
-    { value: 2048, label: "2 GB", description: "High Memory", proOnly: true },
-    { value: 4096, label: "4 GB", description: "Intensive", proOnly: true },
+const PLAN_ORDER: Record<PlanTier, number> = {
+    hobby: 0,
+    plus: 1,
+    pro: 2,
+}
+
+const TIMEOUT_LIMITS: Record<PlanTier, number> = {
+    hobby: 30,
+    plus: 60,
+    pro: 300,
+}
+
+const memoryOptions: {
+    value: number
+    label: string
+    description: string
+    minPlan: PlanTier
+    badge?: string
+}[] = [
+    { value: 1024, label: "1 GB", description: "Standard", minPlan: "hobby" },
+    { value: 2048, label: "2 GB", description: "High Memory", minPlan: "plus", badge: "Plus" },
+    { value: 4096, label: "4 GB", description: "Intensive", minPlan: "pro", badge: "Pro" },
 ]
 
-const ephemeralStorageOptions = [
-    { value: 512, label: "512 MB", description: "Default" },
-    { value: 1024, label: "1 GB", description: "Extended", proOnly: true },
-    { value: 2048, label: "2 GB", description: "Large", proOnly: true },
+const ephemeralStorageOptions: {
+    value: number
+    label: string
+    description: string
+    minPlan: PlanTier
+    badge?: string
+}[] = [
+    { value: 512, label: "512 MB", description: "Default", minPlan: "hobby" },
+    { value: 1024, label: "1 GB", description: "Extended", minPlan: "plus", badge: "Plus" },
+    { value: 2048, label: "2 GB", description: "Large", minPlan: "pro", badge: "Pro" },
 ]
+
+const hasAccessToPlan = (current: PlanTier, required: PlanTier) =>
+    PLAN_ORDER[current] >= PLAN_ORDER[required]
 
 export function ComputeSettings({
     memory,
@@ -32,20 +61,20 @@ export function ComputeSettings({
     onMemoryChange,
     onTimeoutChange,
     onEphemeralStorageChange,
-    isPro,
+    plan,
     onUpgradeClick,
 }: ComputeSettingsProps) {
 
-    const handleMemorySelect = (value: number, isProOnly: boolean) => {
-        if (isProOnly && !isPro) {
+    const handleMemorySelect = (value: number, minPlan: PlanTier) => {
+        if (!hasAccessToPlan(plan, minPlan)) {
             onUpgradeClick()
             return
         }
         onMemoryChange(value)
     }
 
-    const handleEphemeralStorageSelect = (value: number, isProOnly: boolean) => {
-        if (isProOnly && !isPro) {
+    const handleEphemeralStorageSelect = (value: number, minPlan: PlanTier) => {
+        if (!hasAccessToPlan(plan, minPlan)) {
             onUpgradeClick()
             return
         }
@@ -53,7 +82,8 @@ export function ComputeSettings({
     }
 
     const handleTimeoutChange = (value: number) => {
-        if (value > 30 && !isPro) {
+        const limit = TIMEOUT_LIMITS[plan]
+        if (value > limit) {
             onUpgradeClick()
             return
         }
@@ -71,11 +101,11 @@ export function ComputeSettings({
                 <div className="p-4">
                     <div className="space-y-2">
                         {memoryOptions.map((option) => {
-                            const isLocked = option.proOnly && !isPro
+                            const isLocked = !hasAccessToPlan(plan, option.minPlan)
                             return (
                                 <button
                                     key={option.value}
-                                    onClick={() => handleMemorySelect(option.value, !!option.proOnly)}
+                                    onClick={() => handleMemorySelect(option.value, option.minPlan)}
                                     className={`relative w-full p-3 rounded-lg border-2 transition-all text-left ${memory === option.value
                                             ? "border-zinc-900 bg-zinc-50"
                                             : isLocked
@@ -83,9 +113,9 @@ export function ComputeSettings({
                                                 : "border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50"
                                         }`}
                                 >
-                                    {option.proOnly && (
+                                    {option.badge && (
                                         <span className="absolute -top-2 -right-2 bg-zinc-900 text-white text-xs font-medium px-2 py-0.5 rounded-full">
-                                            Pro
+                                            {option.badge}
                                         </span>
                                     )}
                                     <div className="flex items-center justify-between mb-1">
@@ -125,7 +155,7 @@ export function ComputeSettings({
                             <input
                                 type="range"
                                 min="5"
-                                max={isPro ? 300 : 30}
+                                max={TIMEOUT_LIMITS[plan]}
                                 step="5"
                                 value={timeout}
                                 onChange={(e) => handleTimeoutChange(Number(e.target.value))}
@@ -133,19 +163,24 @@ export function ComputeSettings({
                             />
                             <div className="flex justify-between text-xs text-zinc-400 mt-1">
                                 <span>5s</span>
-                                <span>{isPro ? '300s' : '30s'}</span>
+                                <span>{TIMEOUT_LIMITS[plan]}s</span>
                             </div>
                         </div>
-                        {!isPro && (
+                        {plan !== "pro" && (
                             <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-lg">
                                 <p className="text-xs text-zinc-600">
-                                    Free tier limited to 30 seconds.
+                                    {plan === "hobby"
+                                        ? "Hobby plan limited to 30 seconds."
+                                        : "Plus plan limited to 60 seconds."}
                                     <button
                                         onClick={onUpgradeClick}
                                         className="text-zinc-900 font-medium underline ml-1"
                                     >
-                                        Upgrade to Pro
-                                    </button> for up to 5 minutes.
+                                        Upgrade
+                                    </button>{" "}
+                                    {plan === "hobby"
+                                        ? "to Plus for up to 60 seconds, or Pro for up to 5 minutes."
+                                        : "to Pro for up to 5 minutes."}
                                 </p>
                             </div>
                         )}
@@ -162,11 +197,11 @@ export function ComputeSettings({
                 <div className="p-4">
                     <div className="space-y-2">
                         {ephemeralStorageOptions.map((option) => {
-                            const isLocked = option.proOnly && !isPro
+                            const isLocked = !hasAccessToPlan(plan, option.minPlan)
                             return (
                                 <button
                                     key={option.value}
-                                    onClick={() => handleEphemeralStorageSelect(option.value, !!option.proOnly)}
+                                    onClick={() => handleEphemeralStorageSelect(option.value, option.minPlan)}
                                     className={`relative w-full p-3 rounded-lg border-2 transition-all text-left ${ephemeralStorage === option.value
                                             ? "border-zinc-900 bg-zinc-50"
                                             : isLocked
@@ -174,9 +209,9 @@ export function ComputeSettings({
                                                 : "border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50"
                                         }`}
                                 >
-                                    {option.proOnly && (
+                                    {option.badge && (
                                         <span className="absolute -top-2 -right-2 bg-zinc-900 text-white text-xs font-medium px-2 py-0.5 rounded-full">
-                                            Pro
+                                            {option.badge}
                                         </span>
                                     )}
                                     <div className="flex items-center justify-between mb-1">
