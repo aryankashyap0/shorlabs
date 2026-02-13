@@ -3,37 +3,31 @@
 import { useState } from "react";
 
 const steps = [
-    {
-        number: "01",
-        title: "Connect",
-        description: "Link your GitHub account and select a repository.",
-        video: "/1.mp4",
-    },
-    {
-        number: "02",
-        title: "Configure",
-        description: "Set project name, directory, and start command.",
-        video: "/2.mp4",
-    },
-    {
-        number: "03",
-        title: "Customize",
-        description: "Choose memory, timeout, and add environment variables.",
-        video: "/3.mp4",
-    },
-    {
-        number: "04",
-        title: "Deploy",
-        description: "One click. Your backend is live.",
-        video: "/4.mp4",
-    },
+  {
+    number: "01",
+    title: "Connect",
+    description: "Link your GitHub account and select a repository.",
+    video: "/1.mp4",
+  },
+  {
+    number: "02",
+    title: "Configure",
+    description: "Set project name, directory, start command, memory, timeout, and environment variables.",
+    video: "/2.mp4",
+  },
+  {
+    number: "03",
+    title: "Deploy",
+    description: "One click. Your backend is live.",
+    video: "/3.mp4",
+  },
 ];
 
 const HowItWorksSection = () => {
     const [activeStep, setActiveStep] = useState(0);
 
     return (
-        <section className="relative w-full bg-gray-50">
+        <section className="relative w-full bg-white">
             {/* Section Header */}
             <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 pt-16 sm:pt-20 pb-10 sm:pb-14">
                 <div className="text-center sm:text-left max-w-xl mx-auto sm:mx-0">
