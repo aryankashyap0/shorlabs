@@ -94,7 +94,7 @@ function ConfigureProjectContent() {
     const [detectionConfidence, setDetectionConfidence] = useState<"high" | "medium" | "low">("low")
 
     // Compute settings
-    const [memory, setMemory] = useState(1024)
+    const [memory, setMemory] = useState(512)
     const [timeout, setTimeout] = useState(30)
     const [ephemeralStorage, setEphemeralStorage] = useState(512)
 
