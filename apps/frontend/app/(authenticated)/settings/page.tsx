@@ -442,8 +442,9 @@ export default function SettingsPage() {
                                     onClick={async () => {
                                         setBillingPortalLoading(true)
                                         try {
+                                            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : '')
                                             await openBillingPortal({
-                                                returnUrl: window.location.href,
+                                                returnUrl: `${baseUrl}/settings`,
                                             })
                                         } catch (err) {
                                             console.error("Failed to open billing portal:", err)

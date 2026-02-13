@@ -60,6 +60,9 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             const result = await attach({
                 productId,
                 successUrl: `${baseUrl}/projects`,
+                checkoutSessionParams: {
+                    cancel_url: `${baseUrl}/projects`,
+                },
             })
             if (result.error) {
                 setActionError(result.error.message || "Failed to update plan. Please try again.")
