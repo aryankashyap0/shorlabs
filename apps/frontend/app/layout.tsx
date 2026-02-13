@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { AmplitudeProvider } from "@/components/AmplitudeProvider";
 import { AutumnProviderWrapper } from "@/components/AutumnProviderWrapper";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 // Geist Sans - clean, modern sans-serif by Vercel
@@ -44,6 +45,7 @@ export default function RootLayout({
           <AmplitudeProvider>
             <AutumnProviderWrapper>
               {children}
+              <Toaster />
             </AutumnProviderWrapper>
           </AmplitudeProvider>
         </body>

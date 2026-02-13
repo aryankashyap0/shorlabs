@@ -3,8 +3,19 @@
 import { useState } from 'react'
 import { useCustomer } from 'autumn-js/react'
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { PricingCard } from '@/components/pricing-card'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
@@ -22,10 +33,23 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
     const { currentPlan, activeProduct, isCanceling: isDowngradeScheduled, scheduledPlanId, isLoaded } = useIsPro()
     const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
     const [actionError, setActionError] = useState<string | null>(null)
+    const [confirmPlanId, setConfirmPlanId] = useState<string | null>(null)
 
-    const handleSelectPlan = async (productId: string) => {
+    const planToConfirm = confirmPlanId ? PLANS.find((p) => p.id === confirmPlanId) : null
+
+    const handlePlanClick = (productId: string) => {
         if (productId === currentPlan) return
         setActionError(null)
+        setConfirmPlanId(productId)
+    }
+
+    const handleConfirmCancel = () => {
+        setConfirmPlanId(null)
+    }
+
+    const handleConfirmPlan = async () => {
+        const productId = confirmPlanId
+        if (!productId) return
         setLoadingPlan(productId)
         try {
             // Downgrade: cancel the current paid product (reverts to free tier at period end)
@@ -33,8 +57,13 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                 const result = await cancel({ productId: String(activeProduct?.id ?? currentPlan) })
                 if (result.error) {
                     setActionError(result.error.message || "Failed to downgrade plan. Please try again.")
+                    setConfirmPlanId(null)
                     return
                 }
+                setConfirmPlanId(null)
+                toast.success("You've switched to Hobby", {
+                    description: "Your plan will change at the end of your current billing period.",
+                })
                 onClose()
                 return
             }
@@ -46,22 +75,34 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             })
             if (result.error) {
                 setActionError(result.error.message || "Failed to update plan. Please try again.")
+                setConfirmPlanId(null)
                 return
             }
 
-            // When no checkout is required, close the panel.
-            if (!result.data || !('checkout_url' in result.data) || !result.data.checkout_url) {
-                onClose()
+            const planName = PLANS.find((p) => p.id === productId)?.name ?? productId
+
+            setConfirmPlanId(null)
+
+            if (result.data && 'checkout_url' in result.data && result.data.checkout_url) {
+                window.location.href = result.data.checkout_url
+                return
             }
+
+            toast.success("You're all set", {
+                description: `You're now on ${planName}. Your plan has been updated.`,
+            })
+            onClose()
         } catch (err) {
             setActionError("Failed to update plan. Please try again.")
             console.error("Plan change failed:", err)
+            setConfirmPlanId(null)
         } finally {
             setLoadingPlan(null)
         }
     }
 
     return (
+        <>
         <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <SheetContent
                 side="right"
@@ -152,7 +193,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                                     renderAction={() => (
                                         <Button
                                             type="button"
-                                            onClick={() => handleSelectPlan(plan.id)}
+                                            onClick={() => handlePlanClick(plan.id)}
                                             disabled={isCurrent || isScheduledTarget || isLoading || !isLoaded || (isFree && isDowngradeScheduled && scheduledPlanId === "hobby")}
                                             variant={isPro && !isCurrent && !isScheduledTarget ? "default" : "outline"}
                                             className={cn(
@@ -182,6 +223,43 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                 </div>
             </SheetContent>
         </Sheet>
+
+        {/* Confirm plan change */}
+        <AlertDialog open={!!confirmPlanId} onOpenChange={(open) => !open && handleConfirmCancel()}>
+            <AlertDialogContent className="rounded-2xl max-w-md">
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Change plan?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        {planToConfirm?.id === "hobby"
+                            ? "Your plan will switch to Hobby at the end of your current billing period. You can keep using your current plan until then."
+                            : `Are you sure you want to change to ${planToConfirm?.name ?? confirmPlanId}? ${currentPlan && currentPlan !== "hobby" ? "Your card on file will be charged the new amount (prorated)." : "You'll be taken to checkout to complete payment."}`}
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel className="rounded-full" onClick={handleConfirmCancel}>
+                        Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                        className="rounded-full bg-gradient-to-r from-violet-500 to-blue-500 text-white hover:opacity-90 focus:ring-violet-500"
+                        onClick={(e) => {
+                            e.preventDefault()
+                            handleConfirmPlan()
+                        }}
+                        disabled={!!loadingPlan}
+                    >
+                        {loadingPlan ? (
+                            <>
+                                <Loader2 className="size-4 animate-spin mr-2" />
+                                Updating…
+                            </>
+                        ) : (
+                            "Yes, change plan"
+                        )}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    </>
     )
 }
 
