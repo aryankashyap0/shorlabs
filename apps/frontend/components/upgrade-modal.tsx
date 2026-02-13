@@ -35,24 +35,12 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
     const [actionError, setActionError] = useState<string | null>(null)
     const [confirmPlanId, setConfirmPlanId] = useState<string | null>(null)
 
+    const hasCardOnFile = currentPlan === "plus" || currentPlan === "pro"
     const planToConfirm = confirmPlanId ? PLANS.find((p) => p.id === confirmPlanId) : null
 
-    const handlePlanClick = (productId: string) => {
-        if (productId === currentPlan) return
-        setActionError(null)
-        setConfirmPlanId(productId)
-    }
-
-    const handleConfirmCancel = () => {
-        setConfirmPlanId(null)
-    }
-
-    const handleConfirmPlan = async () => {
-        const productId = confirmPlanId
-        if (!productId) return
+    const doChangePlan = async (productId: string) => {
         setLoadingPlan(productId)
         try {
-            // Downgrade: cancel the current paid product (reverts to free tier at period end)
             if (productId === "hobby" && currentPlan && currentPlan !== "hobby") {
                 const result = await cancel({ productId: String(activeProduct?.id ?? currentPlan) })
                 if (result.error) {
@@ -68,10 +56,10 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                 return
             }
 
-            // Upgrade: attach the new paid product
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : '')
             const result = await attach({
                 productId,
-                successUrl: `${window.location.origin}/projects`,
+                successUrl: `${baseUrl}/projects`,
             })
             if (result.error) {
                 setActionError(result.error.message || "Failed to update plan. Please try again.")
@@ -80,7 +68,6 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             }
 
             const planName = PLANS.find((p) => p.id === productId)?.name ?? productId
-
             setConfirmPlanId(null)
 
             if (result.data && 'checkout_url' in result.data && result.data.checkout_url) {
@@ -99,6 +86,25 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
         } finally {
             setLoadingPlan(null)
         }
+    }
+
+    const handlePlanClick = (productId: string) => {
+        if (productId === currentPlan) return
+        setActionError(null)
+        if (hasCardOnFile) {
+            setConfirmPlanId(productId)
+        } else {
+            doChangePlan(productId)
+        }
+    }
+
+    const handleConfirmCancel = () => {
+        setConfirmPlanId(null)
+    }
+
+    const handleConfirmPlan = () => {
+        if (!confirmPlanId) return
+        doChangePlan(confirmPlanId)
     }
 
     return (
