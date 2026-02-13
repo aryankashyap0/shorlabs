@@ -33,7 +33,7 @@ export const PLANS: Plan[] = [
             { label: "1.2K Compute (GB-s)/Month", icon: Zap },
             { label: "512 MB Memory", icon: Cpu },
             { label: "Up to 30s Timeout", icon: Clock },
-            { label: "512 MB Temp Disk", icon: HardDrive },
+            { label: "512 MB Temporary storage", icon: HardDrive },
         ],
     },
     {
@@ -49,7 +49,7 @@ export const PLANS: Plan[] = [
             { label: USAGE_PRICING.compute, icon: Zap },
             { label: "Up to 4 GB Memory", icon: Cpu },
             { label: "Up to 60s Timeout", icon: Clock },
-            { label: "Up to 1 GB Temp Disk", icon: HardDrive },
+            { label: "Up to 1 GB Temporary storage", icon: HardDrive },
         ],
     },
     {
@@ -66,7 +66,7 @@ export const PLANS: Plan[] = [
             { label: USAGE_PRICING.compute, icon: Zap },
             { label: "Up to 8 GB Memory", icon: Cpu },
             { label: "Up to 300s Timeout", icon: Clock },
-            { label: "Up to 2 GB Temp Disk", icon: HardDrive },
+            { label: "Up to 4 GB Temporary storage", icon: HardDrive },
         ],
     },
 ]
