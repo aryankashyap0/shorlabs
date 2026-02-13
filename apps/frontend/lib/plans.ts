@@ -47,7 +47,7 @@ export const PLANS: Plan[] = [
             { label: "$5 Included Usage/Month", icon: DollarSign },
             { label: USAGE_PRICING.requests, icon: Globe },
             { label: USAGE_PRICING.compute, icon: Zap },
-            { label: "Up to 2 GB Memory", icon: Cpu },
+            { label: "Up to 4 GB Memory", icon: Cpu },
             { label: "Up to 60s Timeout", icon: Clock },
             { label: "Up to 1 GB Temp Disk", icon: HardDrive },
         ],
