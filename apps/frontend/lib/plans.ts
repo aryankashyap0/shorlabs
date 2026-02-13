@@ -30,7 +30,7 @@ export const PLANS: Plan[] = [
         features: [
             { label: "1 Project", icon: FolderOpen },
             { label: "3K Requests/Month", icon: Globe },
-            { label: "1.5K Compute (GB-s)/Month", icon: Zap },
+            { label: "1.2K Compute (GB-s)/Month", icon: Zap },
             { label: "1 GB Memory", icon: Cpu },
             { label: "Up to 30s Timeout", icon: Clock },
             { label: "512 MB Temp Disk", icon: HardDrive },
