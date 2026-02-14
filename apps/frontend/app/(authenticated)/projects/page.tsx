@@ -230,11 +230,7 @@ export default function ProjectsPage() {
                                                 {/* Top: Icon + Name + Status */}
                                                 <div className="flex items-start justify-between mb-4">
                                                     <div className="flex items-center gap-3 min-w-0">
-                                                        <div className="w-9 h-9 rounded-lg bg-zinc-900 flex items-center justify-center shrink-0">
-                                                            <span className="text-white font-semibold text-sm">
-                                                                {project.name.charAt(0).toUpperCase()}
-                                                            </span>
-                                                        </div>
+                                                        <div className="w-10 h-10 shrink-0 rounded-full" style={{ background: 'linear-gradient(135deg, #34d399, #a3e635, #facc15)' }} />
                                                         <div className="min-w-0">
                                                             <h3 className="font-semibold text-[15px] text-zinc-900 group-hover:text-black transition-colors truncate">
                                                                 {project.name.toLowerCase().replace(/_/g, '-')}
