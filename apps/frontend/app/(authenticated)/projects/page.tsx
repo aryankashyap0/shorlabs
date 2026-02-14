@@ -39,6 +39,18 @@ const STATUS_CONFIG: Record<string, { dot: string; label: string; bg: string }> 
     FAILED: { dot: "bg-red-500", label: "Error", bg: "bg-red-50" },
 }
 
+const getProjectGradient = (id: string) => {
+    const gradients = [
+        "linear-gradient(135deg, #34d399, #a3e635, #facc15)",
+        "linear-gradient(135deg, #60a5fa, #818cf8, #c084fc)",
+        "linear-gradient(135deg, #f472b6, #fb7185, #fca5a5)",
+        "linear-gradient(135deg, #fbbf24, #fb923c, #f87171)",
+        "linear-gradient(135deg, #22d3ee, #2dd4bf, #34d399)",
+    ]
+    const index = id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    return gradients[index % gradients.length]
+}
+
 export default function ProjectsPage() {
     const { getToken, isLoaded, orgId } = useAuth()
     const { isPro, planLabel } = useIsPro()
@@ -230,7 +242,7 @@ export default function ProjectsPage() {
                                                 {/* Top: Icon + Name + Status */}
                                                 <div className="flex items-start justify-between mb-4">
                                                     <div className="flex items-center gap-3 min-w-0">
-                                                        <div className="w-10 h-10 shrink-0 rounded-full" style={{ background: 'linear-gradient(135deg, #34d399, #a3e635, #facc15)' }} />
+                                                        <div className="w-10 h-10 shrink-0 rounded-full" style={{ background: getProjectGradient(project.project_id) }} />
                                                         <div className="min-w-0">
                                                             <h3 className="font-semibold text-[15px] text-zinc-900 group-hover:text-black transition-colors truncate">
                                                                 {project.name.toLowerCase().replace(/_/g, '-')}
