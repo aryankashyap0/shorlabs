@@ -22,6 +22,7 @@ DEFAULT_EPHEMERAL_STORAGE = 512  # MB (512-10240 allowed)
 RESERVED_ENV_PREFIXES = (
     "AWS_",           # AWS credentials and config
     "LAMBDA_",        # Lambda runtime vars
+    "CODEBUILD_",     # CodeBuild reserved vars
     "_X_AMZN_",       # X-Ray tracing
     "_AWS_XRAY_",     # X-Ray
     "_HANDLER",       # Handler

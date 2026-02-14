@@ -32,7 +32,7 @@ phases:
         . /tmp/build_env
         cd repo/$BUILD_CONTEXT
         echo "Building Docker image..."
-        docker build --build-arg APP_DIR=$APP_DIR -t {{ECR_REPO_URI}}:latest .
+        docker build --build-arg APP_DIR=$APP_DIR {{BUILD_ARGS}} -t {{ECR_REPO_URI}}:latest .
   post_build:
     commands:
       - |

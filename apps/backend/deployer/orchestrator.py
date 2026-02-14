@@ -47,7 +47,7 @@ def deploy_project(
         github_token: OAuth token for private repos
         root_directory: Root directory for monorepos
         start_command: Command to start the application
-        env_vars: Environment variables for the Lambda function
+        env_vars: Environment variables for the build and Lambda function
         memory: Memory in MB (optional, uses default)
         timeout: Timeout in seconds (optional, uses default)
         ephemeral_storage: Ephemeral storage in MB (optional, uses default)
@@ -100,7 +100,8 @@ def deploy_project(
         project_name=project_name,
         start_command=start_command,
         runtime=runtime,
-        root_directory=root_directory
+        root_directory=root_directory,
+        env_vars=env_vars,
     )
     print(f"🔨 Build started: {build_id}")
     

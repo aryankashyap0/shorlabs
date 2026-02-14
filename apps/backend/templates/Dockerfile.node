@@ -7,6 +7,9 @@ COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.9.1 /lambda-adapter /opt
 ARG APP_DIR=.
 ENV APP_DIR=$APP_DIR
 
+# User environment variables (injected at deploy time)
+{{USER_ARGS}}
+
 WORKDIR /app
 
 # Install system dependencies

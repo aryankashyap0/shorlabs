@@ -5,9 +5,11 @@ CodeBuild project and build management.
 """
 
 import time
+from typing import Optional
 
 from ..clients import get_codebuild_client
 from ..config import CODEBUILD_PROJECT_NAME
+from .lambda_service import filter_env_vars
 
 
 def create_or_update_codebuild_project(role_arn: str) -> None:
@@ -49,17 +51,18 @@ def create_or_update_codebuild_project(role_arn: str) -> None:
 
 
 def start_build(
-    github_url: str, 
-    github_token: str, 
-    ecr_repo_uri: str, 
-    project_name: str, 
-    start_command: str, 
+    github_url: str,
+    github_token: str,
+    ecr_repo_uri: str,
+    project_name: str,
+    start_command: str,
     runtime: str = "python",
-    root_directory: str = "./"
+    root_directory: str = "./",
+    env_vars: Optional[dict] = None,
 ) -> str:
     """
     Start a CodeBuild build and return the build ID.
-    
+
     Args:
         github_url: GitHub repository URL
         github_token: GitHub OAuth token
@@ -68,7 +71,8 @@ def start_build(
         start_command: Command to start the application
         runtime: Runtime type ("python" or "nodejs")
         root_directory: Root directory for monorepos
-        
+        env_vars: Optional user environment variables for the build
+
     Returns:
         The build ID
     """
@@ -110,15 +114,26 @@ def start_build(
             break
     
     dockerfile = '\n'.join(lines)
-    
+
+    # Filter and prepare user environment variables
+    filtered_vars = {}
+    if env_vars:
+        filtered_vars, skipped_vars = filter_env_vars(env_vars)
+        if skipped_vars:
+            print(f"⚠️ Skipping reserved env vars for build: {', '.join(skipped_vars)}")
+
+    # Generate ARG/ENV declarations for Dockerfile and replace before indenting
+    user_args = "\n".join(f"ARG {key}\nENV {key}=${{{key}:-}}" for key in filtered_vars)
+    dockerfile = dockerfile.replace('{{USER_ARGS}}', user_args)
+
     # Read buildspec template
     if runtime == "nodejs":
         buildspec_template_path = templates_dir / "buildspec.node.yml"
     else:  # python
         buildspec_template_path = templates_dir / "buildspec.yml"
-    
+
     buildspec_template = buildspec_template_path.read_text()
-    
+
     # Replace placeholders in buildspec
     # The Dockerfile content needs to be indented to match the YAML block scalar
     # Each line needs 8 spaces (2 levels of indentation) to align with the heredoc
@@ -130,17 +145,30 @@ def start_build(
     buildspec = buildspec.replace('{{ROOT_DIRECTORY}}', root_directory)
     buildspec = buildspec.replace('{{REPO_PATH}}', repo_path)
     # Note: GITHUB_TOKEN is passed as env var, not embedded in buildspec
-    
+
+    # Generate --build-arg flags for docker build command
+    build_args = " ".join(f"--build-arg {key}=${key}" for key in filtered_vars)
+    buildspec = buildspec.replace('{{BUILD_ARGS}}', build_args)
+
+    # Build CodeBuild environment variables override list
+    env_overrides = [
+        {
+            "name": "GITHUB_TOKEN",
+            "value": github_token or "",
+            "type": "PLAINTEXT"  # Use SECRETS_MANAGER for production
+        }
+    ]
+    for key, value in filtered_vars.items():
+        env_overrides.append({
+            "name": key,
+            "value": str(value),
+            "type": "PLAINTEXT"
+        })
+
     response = codebuild_client.start_build(
         projectName=CODEBUILD_PROJECT_NAME,
         buildspecOverride=buildspec,
-        environmentVariablesOverride=[
-            {
-                "name": "GITHUB_TOKEN",
-                "value": github_token or "",
-                "type": "PLAINTEXT"  # Use SECRETS_MANAGER for production
-            }
-        ],
+        environmentVariablesOverride=env_overrides,
     )
     
     build_id = response["build"]["id"]
