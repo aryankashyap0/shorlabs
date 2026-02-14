@@ -51,6 +51,12 @@ export default function SectionNavigation() {
                         >
                             Pricing
                         </a>
+                        <Link
+                            href="/blog"
+                            className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                        >
+                            Blog
+                        </Link>
                     </nav>
 
                     {/* Center: Logo */}
@@ -127,6 +133,13 @@ export default function SectionNavigation() {
                     >
                         Pricing
                     </a>
+                    <Link
+                        href="/blog"
+                        onClick={() => setOpen(false)}
+                        className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors"
+                    >
+                        Blog
+                    </Link>
                     <div className="pt-2 border-t border-gray-100 space-y-2">
                         <Link
                             href="/sign-in"
